@@ -1,0 +1,40 @@
+{
+	"name": "bapi",
+	"private": true,
+	"version": "0.0.1",
+	"type": "module",
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview",
+		"prepare": "svelte-kit sync || echo ''",
+		"format": "prettier --write .",
+		"lint": "prettier --check . && eslint .",
+		"copy:shoelace": "xcopy /E /I \"node_modules\\@shoelace-style\\shoelace\\dist\\assets\" \"static\\shoelace\\assets\" >nul 2>&1 && xcopy /E /I \"node_modules\\@shoelace-style\\shoelace\\dist\\themes\" \"static\\shoelace\\themes\" >nul 2>&1"
+	},
+	"devDependencies": {
+		"@eslint/compat": "^1.4.0",
+		"@eslint/js": "^9.36.0",
+		"@sveltejs/adapter-auto": "^6.1.0",
+		"@sveltejs/kit": "^2.43.2",
+		"@sveltejs/vite-plugin-svelte": "^6.2.0",
+		"@types/node": "^22",
+		"eslint": "^9.36.0",
+		"eslint-config-prettier": "^10.1.8",
+		"eslint-plugin-svelte": "^3.12.4",
+		"globals": "^16.4.0",
+		"prettier": "^3.6.2",
+		"prettier-plugin-svelte": "^3.4.0",
+		"sqlite3": "^5.1.7",
+		"svelte": "^5.39.5",
+		"vite": "^7.1.7",
+		"vite-plugin-commonjs": "^0.10.4",
+		"vite-plugin-copy": "^0.1.6",
+		"vite-plugin-devtools-json": "^1.0.0"
+	},
+	"dependencies": {
+		"@libsql/client": "^0.15.15",
+		"@shoelace-style/shoelace": "^2.20.1",
+		"mariadb": "^3.4.5"
+	}
+}
