@@ -9,6 +9,10 @@ node_modules
 /build
 /test
 /static/shoelace/*
+/logs
+/logs/*
+*.log
+**/*.log
 
 # OS
 .DS_Store

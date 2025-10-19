@@ -1,7 +1,8 @@
 import { API_BASE_URL } from '$lib/constants/config.js';
+import { apiLogger } from '$lib/utils/logger.js';
 
 const X_API_KEY = process.env.X_API_KEY;
-const REFERER = process.env.REFERER || 'https://bapi.developtech.ru';
+const REFERER = process.env.REFERER || 'https://bapi.apitter.com';
 
 export class ApiClient {
   constructor() {
@@ -10,13 +11,14 @@ export class ApiClient {
 
   async request(method, path, options = {}) {
     const url = `${this.baseURL}${path}`;
-    
     const headers = {
       'X-Api-Key': X_API_KEY,
       'Referer': REFERER,
       'Content-Type': 'application/json',
       ...options.headers
     };
+
+    apiLogger.logRequest('API', method, url, options.body, headers);
 
     try {
       const response = await fetch(url, {
@@ -25,11 +27,30 @@ export class ApiClient {
         body: options.body ? JSON.stringify(options.body) : undefined
       });
 
-      if (!response.ok) {
-        throw new Error(`API error ${response.status}`);
+      const responseText = await response.text();
+      let responseBody = null;
+
+      try {
+        responseBody = responseText ? JSON.parse(responseText) : null;
+      } catch {
+        responseBody = responseText;
       }
 
-      return await response.json();
+      apiLogger.logResponse(
+        'API', 
+        method, 
+        url, 
+        response.status, 
+        response.statusText, 
+        responseBody,
+        Object.fromEntries(response.headers.entries())
+      );
+
+      if (!response.ok) {
+        throw new Error(`API error ${response.status}: ${response.statusText}`);
+      }
+
+      return responseBody;
 
     } catch (error) {
       console.error('API request failed:', error);
