@@ -117,7 +117,7 @@ export const DB = {
     }
   },
 
-  async getSession(sessionCode) {
+  async getSessionWithUser(sessionCode) {
     try {
       const result = await db.execute({
         sql: `

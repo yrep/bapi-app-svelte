@@ -27,7 +27,7 @@ async function handleProxyRequest(method, path, request, searchParams = null, bo
   let userSession = null;
   
   if (sessionCode) {
-    userSession = await DB.getSession(sessionCode);
+    userSession = await DB.getSessionWithUser(sessionCode);
     if (!userSession) {
       const errorResponse = { error: 'Invalid session' };
       apiLogger.logResponse('FRONT', method, fullUrl, 401, 'Unauthorized', errorResponse);
@@ -39,7 +39,7 @@ async function handleProxyRequest(method, path, request, searchParams = null, bo
     return json(errorResponse, { status: 401 });
   }
 
-  const apiClient = new ApiClient();
+  const apiClient = new ApiClient(userSession.settings);
   const result = await apiClient.request(method, `${fullPath}${queryString}`, { body });
 
   apiLogger.logResponse('FRONT', method, fullUrl, 200, 'OK', result);

@@ -74,7 +74,7 @@ export async function GET({ cookies }) {
   }
 
   try {
-    const session = await DB.getSession(sessionCode);
+    const session = await DB.getSessionWithUser(sessionCode);
     dlog('Session from DB:', session);
 
     if (!session) {

@@ -1,16 +1,21 @@
 import { API_BASE_URL } from '$lib/constants/config.js';
 import { apiLogger } from '$lib/utils/logger.js';
+import { X_API_KEY } from '$env/static/private';
+import { createBapiResponse } from '$lib/utils/bapi-response.js';
+import { AccessMiddleware } from './middleware.js';
 
-const X_API_KEY = process.env.X_API_KEY;
+//const X_API_KEY = process.env.X_API_KEY;
 const REFERER = process.env.REFERER || 'https://bapi.apitter.com';
 
 export class ApiClient {
-  constructor() {
+  constructor(userSettings) {
     this.baseURL = API_BASE_URL;
+    this.middleware = userSettings ? new AccessMiddleware(userSettings) : null;
   }
 
   async request(method, path, options = {}) {
     const url = `${this.baseURL}${path}`;
+
     const headers = {
       'X-Api-Key': X_API_KEY,
       'Referer': REFERER,
@@ -19,6 +24,13 @@ export class ApiClient {
     };
 
     apiLogger.logRequest('API', method, url, options.body, headers);
+
+    if (this.middleware) {
+      const validation = this.middleware.validateRequest(path, method, options.body);
+      if (!validation.allowed) {
+        throw new Error(validation.error || 'Access denied');
+      }
+    }
 
     try {
       const response = await fetch(url, {
@@ -50,7 +62,28 @@ export class ApiClient {
         throw new Error(`API error ${response.status}: ${response.statusText}`);
       }
 
-      return responseBody;
+      const bapiResponse = createBapiResponse(responseBody);
+
+      if (!bapiResponse.isOK()) {
+        throw new Error(bapiResponse.getMessage() || 'API returned error');
+      }
+
+      if (bapiResponse.hasErrors()) {
+        throw new Error(bapiResponse.getErrors().join(', '));
+      }
+
+      if (this.middleware) {
+        const entityType = this.getEntityTypeFromPath(path);
+        data = this.middleware.filterResponse(data, entityType);
+
+        if (data === null || (Array.isArray(data) && data.length === 0)) {
+          throw new Error('Access denied: no permitted data found');
+        }
+      }
+
+      return bapiResponse.getData();
+
+      //return responseBody;
 
     } catch (error) {
       console.error('API request failed:', error);

@@ -29,4 +29,7 @@ export default defineConfig({
 		//'qr-creator': resolve('./src/lib/stubs/qr-creator.js')
 		}
 	},
+	build: {
+		sourcemap: true  // ← Важно для DevTools
+	}
 });

@@ -31,6 +31,7 @@ export const api = {
 };
 
 async function handleApiResponse(response) {
+  console.dir(response)
   if (!response.ok) {
     const errorText = await response.text();
     let errorMessage = `API error ${response.status}`;

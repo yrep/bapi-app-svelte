@@ -28,7 +28,7 @@ import '@shoelace-style/shoelace/dist/components/button/button.js';
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
-	<link rel="stylesheet" href="node_modules/@shoelace-style/shoelace/dist/themes/light.css" />
+	<link rel="stylesheet" href="/shoelace/themes/light.css" />
 	<title>Bapi - Binder API Tool</title>
 </svelte:head>
 
