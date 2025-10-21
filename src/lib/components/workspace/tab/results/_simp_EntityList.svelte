@@ -1,27 +1,20 @@
 <script>
   import { workspaceStore } from '$lib/stores/workspace.js';
-  import EntityContainer from './entity/EntityContainer.svelte';
   
   export let entities = [];
   export let entityType;
   export let loading = false;
   export let onLoadMore = null;
 
-  let expandedEntities = new Set();
-
-  $: console.log('🟢 EntityList RENDERING:', entities?.length, 'entities');
-
-  function toggleExpand(entityId) {
-    if (expandedEntities.has(entityId)) {
-      expandedEntities.delete(entityId);
-    } else {
-      expandedEntities.add(entityId);
-    }
-    // Принудительный обновление реактивности
-    expandedEntities = new Set(expandedEntities);
-  }
+  // Отладка
+  $: console.log('✅ SIMPLE EntityList:', { 
+    entityType, 
+    entitiesCount: entities?.length,
+    entities: entities 
+  });
 
   function handleUserSelect(entity) {
+    console.log('👤 User selected:', entity);
     if (entityType === 'user') {
       workspaceStore.setSelectedUser(entity);
     }
@@ -35,6 +28,10 @@
 </script>
 
 <div class="entity-list">
+  <div style="background: green; color: white; padding: 10px; margin-bottom: 10px;">
+    ✅ SIMPLE VERSION: Showing {entities?.length || 0} entities of type {entityType}
+  </div>
+
   {#if loading && entities.length === 0}
     <div class="loading">
       <sl-spinner></sl-spinner>
@@ -49,13 +46,16 @@
     <div class="entities">
       {#each entities as entity (entity.id)}
         <div class:entity-item--selected={isSelectedUser(entity)} class="entity-item">
-          <!-- ИСПОЛЬЗУЕМ EntityContainer -->
-          <EntityContainer
-            {entity}
-            {entityType}
-            expanded={expandedEntities.has(entity.id)}
-            onToggle={() => toggleExpand(entity.id)}
-          />
+          <!-- ПРОСТОЙ ВЫВОД БЕЗ EntityContainer -->
+          <div class="simple-entity">
+            <h4>Entity: {entityType} - ID: {entity.id}</h4>
+            {#each Object.entries(entity) as [key, value]}
+              <div class="field">
+                <strong>{key}:</strong> 
+                <span>{String(value)}</span>
+              </div>
+            {/each}
+          </div>
           
           {#if entityType === 'user'}
             <div class="entity-actions">
@@ -105,10 +105,13 @@
   .entities {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.5rem;
   }
 
   .entity-item {
+    border: 1px solid var(--sl-color-neutral-200);
+    border-radius: var(--sl-border-radius-medium);
+    padding: 1rem;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
@@ -116,29 +119,37 @@
   }
 
   .entity-item--selected {
-    /* Стиль для выделенного пользователя */
-    position: relative;
+    border-color: var(--sl-color-primary-500);
+    background-color: var(--sl-color-primary-50);
   }
 
-  .entity-item--selected::before {
-    content: '';
-    position: absolute;
-    left: -8px;
-    top: 0;
-    bottom: 0;
-    width: 4px;
-    background: var(--sl-color-primary-500);
-    border-radius: 2px;
+  .simple-entity {
+    flex: 1;
+  }
+
+  .simple-entity h4 {
+    margin: 0 0 0.5rem 0;
+    color: var(--sl-color-neutral-800);
+  }
+
+  .field {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.25rem;
+    font-size: 0.875rem;
+  }
+
+  .field strong {
+    min-width: 120px;
+    color: var(--sl-color-neutral-600);
   }
 
   .entity-actions {
     flex-shrink: 0;
-    margin-top: 1rem;
   }
 
   .load-more-section {
     display: flex;
     justify-content: center;
-    margin-top: 1rem;
   }
 </style>

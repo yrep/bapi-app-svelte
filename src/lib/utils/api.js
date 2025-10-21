@@ -1,5 +1,28 @@
 const API_BASE = '/api';
 
+async function handleApiResponse(response) {
+  const responseClone = response.clone();
+  const responseText = await response.text();
+
+  console.log(`Response status: ${response.status}`);
+  console.log(`Response body: ${responseText}`);
+
+  if (!response.ok) {
+    let errorMessage = `API error ${response.status}`;
+
+    try {
+      const errorData = JSON.parse(responseText);
+      errorMessage = errorData.message || errorData.error || errorMessage;
+    } catch {
+      errorMessage = responseText || errorMessage;
+    }
+
+    throw new Error(errorMessage);
+  }
+
+  return JSON.parse(responseText);
+}
+
 export const api = {
   request: async (method, path, data = null) => {
     const url = `${API_BASE}/${path}`;
@@ -16,7 +39,7 @@ export const api = {
     }
 
     const response = await fetch(url, options);
-    return await response.json();
+    return handleApiResponse(response);
   },
 
   get: (path, params = {}) => {
@@ -30,76 +53,43 @@ export const api = {
   delete: (path) => api.request('DELETE', path)
 };
 
-async function handleApiResponse(response) {
-  console.dir(response)
-  if (!response.ok) {
-    const errorText = await response.text();
-    let errorMessage = `API error ${response.status}`;
-
-    try {
-      const errorData = JSON.parse(errorText);
-      errorMessage = errorData.message || errorData.error || errorMessage;
-    } catch {
-      errorMessage = errorText || errorMessage;
-    }
-
-    throw new Error(errorMessage);
-  }
-
-  return response.json();
-}
-
 export const brandsApi = {
-  list: () => fetch('/api/brands').then(handleApiResponse),
-  getBySlug: (slug) => fetch(`/api/brands/getBrandBySlug?slug=${slug}`).then(handleApiResponse)
+  list: () => api.get('brands'),
+  getBySlug: (slug) => api.get(`brands/getBrandBySlug?slug=${slug}`)
 };
 
 export const usersApi = {
-  getById: (id) => fetch(`/api/users/${id}`).then(handleApiResponse),
-  
-  getByEmail: (email, brandSlug) => {
-    const params = new URLSearchParams({ 
-      email: email,
-      brand_slug: brandSlug 
-    });
-    return fetch(`/api/users/getUserByBrandSlugEmail?${params}`).then(handleApiResponse);
-  },
-  //admin/getUserByBrandSlugCrmDomain
-  getByCRM: (crmId, brandSlug) => {
-    const params = new URLSearchParams({ 
-      domain: crmId,
-      brand_slug: brandSlug 
-    });
-    return fetch(`/api/admin/getUserByBrandSlugCrmDomain?${params}`).then(handleApiResponse);
-  }
+  getById: (id) => api.get(`users/${id}`),
+  getByEmail: (email, brandSlug) => api.get('admin/getUserByBrandSlugEmail', {
+    email: email,
+    brand_slug: brandSlug
+  }),
+  getByCRM: (crmId, brandSlug) => api.get('admin/getUserByBrandSlugCrmDomain', {
+    domain: crmId,
+    brand_slug: brandSlug
+  })
 };
 
 export const entityApi = {
   search: (entityType, params = {}) => {
-    // Для разных entity types используем соответствующие API
     switch (entityType) {
       case 'user':
         if (params.id) return usersApi.getById(params.id);
-        if (params.email) return usersApi.getByEmail(params.email);
-        if (params.crm) return usersApi.getByCRM(params.crm);
+        if (params.email) return usersApi.getByEmail(params.email, params.brandSlug);
+        if (params.crm) return usersApi.getByCRM(params.crm, params.brandSlug);
         break;
       case 'vendor':
-        // Заглушка для vendor API - замените на реальное
-        return fetch(`/api/vendors/${params.id}`).then(handleApiResponse);
+        return api.get(`vendors/${params.id}`);
       case 'bind':
-        // Заглушка для bind API - замените на реальное
-        return fetch(`/api/binds/${params.id}`).then(handleApiResponse);
+        return api.get(`binds/${params.id}`);
       case 'task':
-        // Заглушка для task API - замените на реальное
-        return fetch(`/api/tasks/${params.id}`).then(handleApiResponse);
+        return api.get(`tasks/${params.id}`);
       case 'request':
-        // Заглушка для request API - замените на реальное
-        return fetch(`/api/requests/${params.id}`).then(handleApiResponse);
+        return api.get(`requests/${params.id}`);
       default:
         throw new Error(`Unknown entity type: ${entityType}`);
     }
-    
-    // Если не нашли подходящий параметр, возвращаем пустой массив
+
     return Promise.resolve([]);
   }
 };

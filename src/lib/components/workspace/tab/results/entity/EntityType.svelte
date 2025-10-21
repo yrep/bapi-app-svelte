@@ -1,27 +1,20 @@
 <script>
   import { workspaceStore } from '$lib/stores/workspace.js';
-  import EntityContainer from './entity/EntityContainer.svelte';
   
   export let entities = [];
   export let entityType;
   export let loading = false;
   export let onLoadMore = null;
 
-  let expandedEntities = new Set();
-
-  $: console.log('🟢 EntityList RENDERING:', entities?.length, 'entities');
-
-  function toggleExpand(entityId) {
-    if (expandedEntities.has(entityId)) {
-      expandedEntities.delete(entityId);
-    } else {
-      expandedEntities.add(entityId);
-    }
-    // Принудительный обновление реактивности
-    expandedEntities = new Set(expandedEntities);
-  }
+  // Отладка
+  $: console.log('✅ EntityList with BoolFieldIcon:', { 
+    entityType, 
+    entitiesCount: entities?.length,
+    entities: entities 
+  });
 
   function handleUserSelect(entity) {
+    console.log('👤 User selected:', entity);
     if (entityType === 'user') {
       workspaceStore.setSelectedUser(entity);
     }
@@ -32,9 +25,25 @@
            $workspaceStore.selectedUser && 
            $workspaceStore.selectedUser.id === entity.id;
   }
+
+  // Функция для отображения поля с учетом типа
+  function renderField(key, value) {
+    if (key === 'is_verified' || key === 'enable') {
+      return `
+        <sl-icon name="${value === '1' ? 'check' : 'x'}" 
+                 style="color: ${value === '1' ? 'green' : 'red'};">
+        </sl-icon>
+      `;
+    }
+    return String(value);
+  }
 </script>
 
 <div class="entity-list">
+  <div style="background: green; color: white; padding: 10px; margin-bottom: 10px;">
+    ✅ WITH BOOL FIELDS: Showing {entities?.length || 0} entities of type {entityType}
+  </div>
+
   {#if loading && entities.length === 0}
     <div class="loading">
       <sl-spinner></sl-spinner>
@@ -49,13 +58,25 @@
     <div class="entities">
       {#each entities as entity (entity.id)}
         <div class:entity-item--selected={isSelectedUser(entity)} class="entity-item">
-          <!-- ИСПОЛЬЗУЕМ EntityContainer -->
-          <EntityContainer
-            {entity}
-            {entityType}
-            expanded={expandedEntities.has(entity.id)}
-            onToggle={() => toggleExpand(entity.id)}
-          />
+          <div class="simple-entity">
+            <h4>Entity: {entityType} - ID: {entity.id}</h4>
+            {#each Object.entries(entity) as [key, value]}
+              <div class="field">
+                <strong>{key}:</strong> 
+                <div class="field-value">
+                  {#if key === 'is_verified' || key === 'enable'}
+                    <sl-icon 
+                      name={value === '1' ? 'check' : 'x'} 
+                      style={value === '1' ? 'color: green;' : 'color: red;'}
+                    ></sl-icon>
+                    ({value})
+                  {:else}
+                    <span>{String(value)}</span>
+                  {/if}
+                </div>
+              </div>
+            {/each}
+          </div>
           
           {#if entityType === 'user'}
             <div class="entity-actions">
@@ -105,10 +126,13 @@
   .entities {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.5rem;
   }
 
   .entity-item {
+    border: 1px solid var(--sl-color-neutral-200);
+    border-radius: var(--sl-border-radius-medium);
+    padding: 1rem;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
@@ -116,29 +140,43 @@
   }
 
   .entity-item--selected {
-    /* Стиль для выделенного пользователя */
-    position: relative;
+    border-color: var(--sl-color-primary-500);
+    background-color: var(--sl-color-primary-50);
   }
 
-  .entity-item--selected::before {
-    content: '';
-    position: absolute;
-    left: -8px;
-    top: 0;
-    bottom: 0;
-    width: 4px;
-    background: var(--sl-color-primary-500);
-    border-radius: 2px;
+  .simple-entity {
+    flex: 1;
+  }
+
+  .simple-entity h4 {
+    margin: 0 0 0.5rem 0;
+    color: var(--sl-color-neutral-800);
+  }
+
+  .field {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.25rem;
+    font-size: 0.875rem;
+  }
+
+  .field strong {
+    min-width: 120px;
+    color: var(--sl-color-neutral-600);
+  }
+
+  .field-value {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
   }
 
   .entity-actions {
     flex-shrink: 0;
-    margin-top: 1rem;
   }
 
   .load-more-section {
     display: flex;
     justify-content: center;
-    margin-top: 1rem;
   }
 </style>

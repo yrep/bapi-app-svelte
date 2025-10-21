@@ -7,6 +7,7 @@ function createTabsStore() {
   return {
     subscribe,
     addTab: (entityType, searchParams = {}, id = nanoid()) => {
+      console.log('➕ Adding tab:', { id, entityType, searchParams });
       update(tabs => {
         const newTab = {
           id,
@@ -19,11 +20,22 @@ function createTabsStore() {
           hasMore: false
         };
         
-        // Делаем новую вкладку активной
         const updatedTabs = tabs.map(tab => ({ ...tab, active: false }));
-        return [...updatedTabs, { ...newTab, active: true }];
+        const newTabs = [...updatedTabs, { ...newTab, active: true }];
+        console.log('📋 Tabs after add:', newTabs);
+        return newTabs;
       });
       return id;
+    },
+    updateTab: (tabId, updates) => {
+      console.log('🔄 Updating tab:', tabId, updates);
+      update(tabs => {
+        const newTabs = tabs.map(tab => 
+          tab.id === tabId ? { ...tab, ...updates } : tab
+        );
+        console.log('📋 Tabs after update:', newTabs);
+        return newTabs;
+      });
     },
     removeTab: (tabId) => {
       update(tabs => {
@@ -34,11 +46,6 @@ function createTabsStore() {
         }
         return filtered;
       });
-    },
-    updateTab: (tabId, updates) => {
-      update(tabs => tabs.map(tab => 
-        tab.id === tabId ? { ...tab, ...updates } : tab
-      ));
     },
     updateSearchParams: (tabId, searchParams) => {
       update(tabs => tabs.map(tab => 

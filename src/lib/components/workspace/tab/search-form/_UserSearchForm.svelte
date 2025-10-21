@@ -1,20 +1,47 @@
 <script>
+  import { onMount } from 'svelte';
   import { tabsStore } from '$lib/stores/tabs.js';
   import { workspaceStore } from '$lib/stores/workspace.js';
-  import { usersApi } from '$lib/utils/api.js';
+  import { usersApi, brandsApi } from '$lib/utils/api.js';
   import { toast } from '$lib/stores/toast.js';
 
   export let tab;
 
   let searchType = 'id';
   let searchValue = '';
+  let selectedBrand = '';
+  let brands = [];
   let loading = false;
+  let brandsLoading = false;
 
   const limit = $workspaceStore.settings.defaultLimit;
+
+  onMount(async () => {
+    // Загружаем бренды при монтировании
+    await loadBrands();
+  });
+
+  async function loadBrands() {
+    brandsLoading = true;
+    try {
+      brands = await brandsApi.list();
+    } catch (error) {
+      toast.error('Failed to load brands');
+      console.error('Brands loading error:', error);
+    } finally {
+      brandsLoading = false;
+    }
+  }
 
   async function handleSearch() {
     if (!searchValue.trim()) {
       toast.error('Please enter search value');
+      return;
+    }
+
+    // Для поиска по email и CRM требуется выбор бренда
+    if (searchType !== 'id' && !selectedBrand) {
+      toast.error('Please select a brand for this search type');
       return;
     }
 
@@ -25,7 +52,8 @@
       let results;
       const searchParams = { 
         type: searchType, 
-        value: searchValue
+        value: searchValue,
+        brand: selectedBrand 
       };
 
       switch (searchType) {
@@ -33,10 +61,10 @@
           results = await usersApi.getById(searchValue.trim());
           break;
         case 'email':
-          results = await usersApi.getByEmail(searchValue.trim());
+          results = await usersApi.getByEmail(searchValue.trim(), selectedBrand);
           break;
         case 'crm':
-          results = await usersApi.getByCRM(searchValue.trim());
+          results = await usersApi.getByCRM(searchValue.trim(), selectedBrand);
           break;
       }
       
@@ -70,11 +98,20 @@
     }
   }
 
+  // Сбрасываем бренд при смене типа поиска на ID
+  $: if (searchType === 'id') {
+    selectedBrand = '';
+  }
+
+  // Плейсхолдер для поля ввода
   $: inputPlaceholder = searchType === 'id' 
     ? 'Enter user ID' 
     : searchType === 'email' 
       ? 'Enter email address' 
       : 'Enter CRM ID';
+
+  // Нужен ли выбор бренда для текущего типа поиска
+  $: showBrandSelect = searchType !== 'id';
 </script>
 
 <div class="search-form">
@@ -89,6 +126,21 @@
       <sl-option value="crm">By CRM</sl-option>
     </sl-select>
 
+    {#if showBrandSelect}
+      <sl-select
+        placeholder="Select brand"
+        value={selectedBrand}
+        on:sl-change={(e) => selectedBrand = e.target.value}
+        style="min-width: 150px;"
+        loading={brandsLoading}
+        disabled={brandsLoading}
+      >
+        {#each brands as brand}
+          <sl-option value={brand.slug}>{brand.name}</sl-option>
+        {/each}
+      </sl-select>
+    {/if}
+
     <sl-input
       placeholder={inputPlaceholder}
       value={searchValue}
@@ -100,7 +152,7 @@
         slot="suffix"
         variant="primary"
         loading={loading}
-        disabled={!searchValue.trim()}
+        disabled={!searchValue.trim() || (showBrandSelect && !selectedBrand)}
         on:click={handleSearch}
       >
         <sl-icon slot="prefix" name="search"></sl-icon>
@@ -108,6 +160,13 @@
       </sl-button>
     </sl-input>
   </div>
+
+  {#if showBrandSelect && !brandsLoading && brands.length === 0}
+    <sl-alert variant="warning" open style="margin-top: 0.5rem;">
+      <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+      No brands available. Please check your API configuration.
+    </sl-alert>
+  {/if}
 </div>
 
 <style>

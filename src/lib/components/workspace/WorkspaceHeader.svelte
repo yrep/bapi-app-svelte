@@ -1,15 +1,18 @@
 <script>
   import { goto } from '$app/navigation';
-  import { workspaceStore } from '$lib/stores/workspace.js';
+  import { workspaceStore } from '$lib/stores/workspace.js'; // ← исправил импорт
   import { tabsStore } from '$lib/stores/tabs.js';
 
-  
   export let workspace;
 
   let showSettings = false;
 
   function toggleSettings() {
     showSettings = !showSettings;
+  }
+
+  function clearSelectedUser() {
+    workspaceStore.clearSelectedUser();
   }
 </script>
 
@@ -21,7 +24,24 @@
         label="Back to workspaces"
         on:click={() => goto('/')}
       ></sl-icon-button>
-      <h1>{workspace.name}</h1>
+      <div class="workspace-info">
+        <h1>{workspace.name}</h1>
+        <!-- Блок выбранного пользователя -->
+        {#if $workspaceStore.selectedUser}
+          <div class="selected-user">
+            <sl-tag variant="primary" size="small">
+              <sl-icon name="person" slot="prefix"></sl-icon>
+              User: {$workspaceStore.selectedUser.name || $workspaceStore.selectedUser.id}
+              <sl-icon-button 
+                name="x" 
+                label="Clear user"
+                size="small"
+                on:click={clearSelectedUser}
+              ></sl-icon-button>
+            </sl-tag>
+          </div>
+        {/if}
+      </div>
     </div>
 
     <div class="workspace-actions">
@@ -88,9 +108,20 @@
     gap: 0.5rem;
   }
 
+  .workspace-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
   .back-button h1 {
     margin: 0;
     color: var(--sl-color-neutral-800);
+  }
+
+  .selected-user {
+    display: flex;
+    align-items: center;
   }
 
   .workspace-actions {

@@ -130,12 +130,25 @@ export const DB = {
       });
 
       const session = result.rows[0];
-      if (session && session.settings) {
-        try {
-          session.settings = JSON.parse(session.settings);
-        } catch (e) {
-          session.settings = {};
+      if (session) {
+
+        let settings = {};
+
+        if (session.settings) {
+          try {
+            settings = JSON.parse(session.settings);
+          } catch (e) {
+            console.error('Error parsing settings:', e);
+          }
         }
+
+        session.settings = {
+          role: session.role, // adding role from session
+          limitations: settings.limitations || {
+            brand_slugs: [],
+            user_ids: []
+          }
+        };
       }
 
       return session || null;

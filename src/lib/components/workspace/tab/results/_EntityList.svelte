@@ -1,15 +1,29 @@
 <script>
+  import { writable, derived } from 'svelte/store';
   import { workspaceStore } from '$lib/stores/workspace.js';
   import EntityContainer from './entity/EntityContainer.svelte';
-  
+
   export let entities = [];
   export let entityType;
   export let loading = false;
   export let onLoadMore = null;
 
+  let filterText = '';
   let expandedEntities = new Set();
 
-  $: console.log('🟢 EntityList RENDERING:', entities?.length, 'entities');
+  const filteredEntities = derived(
+    [writable(entities), writable(filterText)],
+    ([$entities, $filterText]) => {
+      if (!$filterText) return $entities;
+
+      const searchTerm = $filterText.toLowerCase();
+      return $entities.filter(entity =>
+        Object.values(entity).some(value =>
+          String(value).toLowerCase().includes(searchTerm)
+        )
+      );
+    }
+  );
 
   function toggleExpand(entityId) {
     if (expandedEntities.has(entityId)) {
@@ -17,10 +31,10 @@
     } else {
       expandedEntities.add(entityId);
     }
-    // Принудительный обновление реактивности
-    expandedEntities = new Set(expandedEntities);
+    expandedEntities = expandedEntities;
   }
 
+  // ← ДОБАВИТЬ ФУНКЦИИ ДЛЯ РАБОТЫ С ПОЛЬЗОВАТЕЛЕМ
   function handleUserSelect(entity) {
     if (entityType === 'user') {
       workspaceStore.setSelectedUser(entity);
@@ -35,21 +49,31 @@
 </script>
 
 <div class="entity-list">
+  <div class="filter-section">
+    <sl-input
+      placeholder="Filter results..."
+      value={filterText}
+      on:sl-input={(e) => filterText = e.target.value}
+      clearable
+    >
+      <sl-icon name="search" slot="prefix"></sl-icon>
+    </sl-input>
+  </div>
+
   {#if loading && entities.length === 0}
     <div class="loading">
       <sl-spinner></sl-spinner>
       <span>Loading...</span>
     </div>
-  {:else if entities.length === 0}
+  {:else if filteredEntities.length === 0}
     <div class="empty-state">
       <sl-icon name="search"></sl-icon>
-      <p>No data</p>
+      <p>{filterText ? 'No matching results' : 'No data'}</p>
     </div>
   {:else}
     <div class="entities">
-      {#each entities as entity (entity.id)}
+      {#each filteredEntities as entity (entity.id)}
         <div class:entity-item--selected={isSelectedUser(entity)} class="entity-item">
-          <!-- ИСПОЛЬЗУЕМ EntityContainer -->
           <EntityContainer
             {entity}
             {entityType}
@@ -105,10 +129,13 @@
   .entities {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.5rem;
   }
 
   .entity-item {
+    border: 1px solid var(--sl-color-neutral-200);
+    border-radius: var(--sl-border-radius-medium);
+    padding: 1rem;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
@@ -116,29 +143,16 @@
   }
 
   .entity-item--selected {
-    /* Стиль для выделенного пользователя */
-    position: relative;
-  }
-
-  .entity-item--selected::before {
-    content: '';
-    position: absolute;
-    left: -8px;
-    top: 0;
-    bottom: 0;
-    width: 4px;
-    background: var(--sl-color-primary-500);
-    border-radius: 2px;
+    border-color: var(--sl-color-primary-500);
+    background-color: var(--sl-color-primary-50);
   }
 
   .entity-actions {
     flex-shrink: 0;
-    margin-top: 1rem;
   }
 
   .load-more-section {
     display: flex;
     justify-content: center;
-    margin-top: 1rem;
   }
 </style>

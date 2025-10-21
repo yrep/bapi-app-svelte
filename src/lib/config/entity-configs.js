@@ -1,5 +1,6 @@
 const entityConfigs = {
   user: {
+    displayName: 'User',
     searchForm: 'UserSearchForm',
     fields: {
       id: {
@@ -8,26 +9,43 @@ const entityConfigs = {
         fetchButton: true,
         fetchEntity: 'user'
       },
-      name: {
+      brand_slug: {
         component: 'TextField',
         editable: true
       },
       email: {
-        component: 'TextField', 
+        component: 'TextField',
         editable: true
       },
-      metadata: {
-        component: 'JsonField',
+      auth_type: {
+        component: 'TextField',
+        editable: true
+      },
+      is_verified: {
+        component: 'BoolFieldIcon',
         editable: false
       },
-      is_active: {
+      enable: {
         component: 'BoolFieldIcon',
         editable: true
+      },
+      dt_ins: {
+        component: 'TextField',
+        editable: false
+      },
+      dt_upd: {
+        component: 'TextField',
+        editable: false
+      },
+      refresh_token: {
+        component: 'TextField',
+        editable: false
       }
     },
-    brief: ['id', 'name', 'email']
+    brief: ['id', 'brand_slug', 'email', 'is_verified', 'enable']
   },
   vendor: {
+    displayName: 'Vendors',
     searchForm: 'BaseSearchForm',
     fields: {
       id: {
@@ -48,6 +66,7 @@ const entityConfigs = {
     brief: ['id', 'name']
   },
   bind: {
+    displayName: 'Binds',
     searchForm: 'BaseSearchForm',
     fields: {
       id: {
@@ -71,6 +90,7 @@ const entityConfigs = {
     brief: ['id', 'user_id', 'vendor_id']
   },
   task: {
+    displayName: 'Tasks',
     searchForm: 'BaseSearchForm',
     fields: {
       id: {
@@ -86,6 +106,7 @@ const entityConfigs = {
     brief: ['id', 'title']
   },
   request: {
+    displayName: 'Requests',
     searchForm: 'BaseSearchForm',
     fields: {
       id: {

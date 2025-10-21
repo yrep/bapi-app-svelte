@@ -1,6 +1,6 @@
 <script>
   import { tabsStore } from '$lib/stores/tabs.js';
-  import { workspaceStore } from '$lib/stores/workspace.js';
+  import { workspaceStore } from '$lib/stores/_workspace.js';
   import { entityApi } from '$lib/utils/api.js';
   import { toast } from '$lib/stores/toast.js';
 

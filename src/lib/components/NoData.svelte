@@ -27,12 +27,12 @@
     box-shadow: var(--sl-shadow-small);
     margin: 1rem 0;
   }
-  
+
   .no-data h2 {
     margin: 1rem 0 0.5rem 0;
     color: var(--sl-color-neutral-700);
   }
-  
+
   .no-data p {
     color: var(--sl-color-neutral-600);
     margin-bottom: 2rem;

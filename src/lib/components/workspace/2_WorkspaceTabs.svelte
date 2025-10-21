@@ -1,6 +1,6 @@
 <script>
   import { tabsStore } from '$lib/stores/tabs.js';
-  import { workspaceStore, WORKSPACE_TYPES } from '$lib/stores/workspace.js';
+  import { workspaceStore, WORKSPACE_TYPES } from '$lib/stores/_workspace.js';
   import { getEntityConfig } from '$lib/config/entity-configs.js';
   import { derived } from 'svelte/store';
 
@@ -9,6 +9,12 @@
   const availableEntities = derived(workspaceStore, $ws => 
     WORKSPACE_TYPES[$ws.workspaceType]?.availableEntities || []
   );
+
+   onMount(() => {
+    console.log('WorkspaceTabs mounted');
+    console.log('Available entities:', $availableEntities);
+    console.log('Current tabs:', $tabsStore);
+  });
 
   function handleTabClick(tabId) {
     tabsStore.setActiveTab(tabId);
@@ -24,16 +30,23 @@
     showAddMenu = false;
   }
 
-  function getTabTitle(tab) {
+function getTabTitle(tab) {
+  try {
     const config = getEntityConfig(tab.entityType);
-    const hasParams = Object.keys(tab.searchParams).length > 0;
-    
+    const hasParams = tab.searchParams && Object.keys(tab.searchParams).length > 0;
+
+    const entityName = config?.displayName || tab.entityType;
+
     if (hasParams && tab.searchParams.id) {
-      return `${tab.entityType}: ${tab.searchParams.id}`;
+      return `${entityName}: ${tab.searchParams.id}`;
     }
-    
-    return `${tab.entityType}${hasParams ? ' (search)' : ''}`;
+
+    return `${entityName}${hasParams ? ' (search)' : ''}`;
+  } catch (error) {
+    console.error('Error getting tab title:', error);
+    return tab.entityType || 'Unknown';
   }
+}
 </script>
 
 <div class="tabs-container">

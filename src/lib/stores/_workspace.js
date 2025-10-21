@@ -21,8 +21,7 @@ function createWorkspaceStore() {
   const { subscribe, set, update } = writable({
     currentWorkspace: null,
     workspaceType: 'binder',
-    settings: WORKSPACE_TYPES.binder.settings,
-    selectedUser: null // ← ДОБАВЛЯЕМ ВЫБРАННОГО ПОЛЬЗОВАТЕЛЯ
+    settings: WORKSPACE_TYPES.binder.settings
   });
 
   // Сохраняем состояние только если saveTabChain включен
@@ -33,7 +32,6 @@ function createWorkspaceStore() {
           workspaceId: state.currentWorkspace?.id,
           workspaceType: state.workspaceType,
           settings: state.settings,
-          selectedUser: state.selectedUser, // ← СОХРАНЯЕМ ПОЛЬЗОВАТЕЛЯ
           tabChain: $tabsStore.map(tab => ({
             id: tab.id,
             entityType: tab.entityType,
@@ -55,8 +53,7 @@ function createWorkspaceStore() {
         ...state,
         currentWorkspace: workspace,
         workspaceType: type,
-        settings: { ...workspaceConfig.settings, ...state.settings },
-        selectedUser: null // ← СБРАСЫВАЕМ ПРИ СМЕНЕ WORKSPACE
+        settings: { ...workspaceConfig.settings, ...state.settings }
       }));
 
       // Создаем начальный таб для этого типа workspace
@@ -68,18 +65,6 @@ function createWorkspaceStore() {
       update(state => ({
         ...state,
         settings: { ...state.settings, ...newSettings }
-      }));
-    },
-    setSelectedUser: (userData) => { // ← МЕТОД ДЛЯ УСТАНОВКИ ПОЛЬЗОВАТЕЛЯ
-      update(state => ({
-        ...state,
-        selectedUser: userData
-      }));
-    },
-    clearSelectedUser: () => { // ← МЕТОД ДЛЯ ОЧИСТКИ
-      update(state => ({
-        ...state,
-        selectedUser: null
       }));
     },
     restoreState: (workspaceId) => {
@@ -94,12 +79,6 @@ function createWorkspaceStore() {
             state.tabChain.forEach(tabData => {
               tabsStore.addTab(tabData.entityType, tabData.searchParams, tabData.id);
             });
-            
-            // Восстанавливаем выбранного пользователя
-            if (state.selectedUser) {
-              update(store => ({ ...store, selectedUser: state.selectedUser }));
-            }
-            
             return true;
           }
         } catch (e) {
