@@ -9,28 +9,13 @@
 
   let expandedEntities = new Set();
 
-  $: console.log('🟢 EntityList RENDERING:', entities?.length, 'entities');
-
   function toggleExpand(entityId) {
     if (expandedEntities.has(entityId)) {
       expandedEntities.delete(entityId);
     } else {
       expandedEntities.add(entityId);
     }
-    // Принудительный обновление реактивности
     expandedEntities = new Set(expandedEntities);
-  }
-
-  function handleUserSelect(entity) {
-    if (entityType === 'user') {
-      workspaceStore.setSelectedUser(entity);
-    }
-  }
-
-  function isSelectedUser(entity) {
-    return entityType === 'user' && 
-           $workspaceStore.selectedUser && 
-           $workspaceStore.selectedUser.id === entity.id;
   }
 </script>
 
@@ -48,26 +33,13 @@
   {:else}
     <div class="entities">
       {#each entities as entity (entity.id)}
-        <div class:entity-item--selected={isSelectedUser(entity)} class="entity-item">
-          <!-- ИСПОЛЬЗУЕМ EntityContainer -->
+        <div class:entity-item--selected={$workspaceStore.selectedUser?.id === entity.id} class="entity-item">
           <EntityContainer
             {entity}
             {entityType}
             expanded={expandedEntities.has(entity.id)}
             onToggle={() => toggleExpand(entity.id)}
           />
-          
-          {#if entityType === 'user'}
-            <div class="entity-actions">
-              <sl-button 
-                size="small" 
-                variant={isSelectedUser(entity) ? 'primary' : 'default'}
-                on:click={() => handleUserSelect(entity)}
-              >
-                {isSelectedUser(entity) ? 'Selected' : 'Select'}
-              </sl-button>
-            </div>
-          {/if}
         </div>
       {/each}
     </div>
@@ -109,14 +81,10 @@
   }
 
   .entity-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 1rem;
+    transition: all 0.2s ease;
   }
 
   .entity-item--selected {
-    /* Стиль для выделенного пользователя */
     position: relative;
   }
 
@@ -129,11 +97,6 @@
     width: 4px;
     background: var(--sl-color-primary-500);
     border-radius: 2px;
-  }
-
-  .entity-actions {
-    flex-shrink: 0;
-    margin-top: 1rem;
   }
 
   .load-more-section {
