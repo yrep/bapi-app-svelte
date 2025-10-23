@@ -58,6 +58,7 @@ export const brandsApi = {
   getBySlug: (slug) => api.get(`brands/getBrandBySlug?slug=${slug}`)
 };
 
+
 export const usersApi = {
   getById: (id) => api.get(`users/${id}`),
   getByEmail: (email, brandSlug) => api.get('admin/getUserByBrandSlugEmail', {
@@ -70,6 +71,11 @@ export const usersApi = {
   })
 };
 
+export const vendorsApi = {
+  search: (uuid) => api.post(`vendors/getVendor?slug=${uuid}`),
+  getByUuid: (uuid) => api.post(`vendors/getVendor?slug=${uuid}`),
+};
+
 export const entityApi = {
   search: (entityType, params = {}) => {
     switch (entityType) {
@@ -79,9 +85,10 @@ export const entityApi = {
         if (params.crm) return usersApi.getByCRM(params.crm, params.brandSlug);
         break;
       case 'vendor':
-        return api.get(`vendors/${params.id}`);
+        if (params.uuid) return api.post(`vendors/getVendor`, params);
+        //return api.get(`vendors/${params.id}`);
       case 'bind':
-        return api.get(`binds/${params.id}`);
+        return api.get(`vendors/getVendorBindsWithData`);
       case 'task':
         return api.get(`tasks/${params.id}`);
       case 'request':

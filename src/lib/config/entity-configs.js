@@ -42,24 +42,26 @@ const entityConfigs = {
         editable: false
       }
     },
-    brief: ['id', 'brand_slug', 'email', 'is_verified', 'enable']
+    brief: ['id', 'email', 'is_verified', 'enable']
   },
   vendor: {
     displayName: 'Vendors',
-    searchForm: 'BaseSearchForm',
+    searchForm: 'VendorSearchForm',
     fields: {
       id: {
-        component: 'TextField',
+        component: 'NumberField',
         editable: false,
-        fetchButton: true,
-        fetchEntity: 'vendor'
       },
-      name: {
+      uuid: {
         component: 'TextField',
-        editable: true
+        editable: false
       },
-      settings: {
-        component: 'JsonField',
+      token: {
+        component: 'TextField',
+        editable: false
+      },
+      login: {
+        component: 'TextField',
         editable: false
       }
     },
@@ -74,13 +76,17 @@ const entityConfigs = {
         editable: false,
         fetchButton: true
       },
-      user_id: {
+      uuid: {
+        component: 'TextField',
+        editable: false
+      },
+      vendor_from_id: {
         component: 'TextField',
         editable: false,
         fetchButton: true,
-        fetchEntity: 'user'
+        fetchEntity: 'vendor'
       },
-      vendor_id: {
+      vendor_to_id: {
         component: 'TextField', 
         editable: false,
         fetchButton: true,

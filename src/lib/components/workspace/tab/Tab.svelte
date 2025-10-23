@@ -4,6 +4,7 @@
   
   import BaseSearchForm from './search-form/BaseSearchForm.svelte';
   import UserSearchForm from './search-form/_UserSearchForm.svelte';
+  import VendorSearchForm from './search-form/VendorSearchForm.svelte';
   import EntityList from './results/EntityList.svelte';
 
   export let tab;
@@ -20,7 +21,8 @@
 
   const searchFormComponents = {
     BaseSearchForm,
-    UserSearchForm
+    UserSearchForm,
+    VendorSearchForm
   };
 
   const config = getEntityConfig(tab.entityType);
