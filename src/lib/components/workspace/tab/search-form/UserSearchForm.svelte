@@ -14,7 +14,7 @@
 
 async function handleSearch() {
   console.log('✅ handleSearch CALLED!');
-  
+
   if (!searchValue.trim()) {
     toast.error('Please enter search value');
     return;
@@ -26,7 +26,7 @@ async function handleSearch() {
   try {
     let results;
     console.log('✅ Making API call for:', searchType, searchValue);
-    
+
     switch (searchType) {
       case 'id':
         results = await usersApi.getById(searchValue.trim());
@@ -38,22 +38,20 @@ async function handleSearch() {
         results = await usersApi.getByCRM(searchValue.trim());
         break;
     }
-    
+
     console.log('✅ API RAW RESULTS:', results);
-    
-    // ПРОСТОЕ СОХРАНЕНИЕ - без сложной логики
+
     const resultArray = Array.isArray(results) ? results : [results].filter(Boolean);
-    
+
     console.log('✅ FINAL RESULT ARRAY:', resultArray);
-    
-    // ПРОСТОЕ ОБНОВЛЕНИЕ СТОРА
-    tabsStore.updateTab(tab.id, { 
+
+    tabsStore.updateTab(tab.id, {
       results: resultArray,
       searchParams: { type: searchType, value: searchValue }
     });
-    
+
     console.log('✅ Tab updated with results');
-    
+
   } catch (error) {
     console.error('❌ Search error:', error);
     toast.error(error.message || 'Search failed');

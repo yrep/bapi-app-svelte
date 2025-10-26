@@ -20,6 +20,14 @@ export class ApiClient {
   async request(method, path, options = {}) {
     const url = `${this.baseURL}${path}`;
 
+    console.log('🚀 API CLIENT REQUEST:', {
+      method,
+      fullUrl: url,
+      baseURL: this.baseURL,
+      path: path,
+      body: options.body
+    });
+
     const headers = {
       'X-Api-Key': X_API_KEY,
       'Referer': REFERER,
@@ -53,11 +61,11 @@ export class ApiClient {
       }
 
       apiLogger.logResponse(
-        'API', 
-        method, 
-        url, 
-        response.status, 
-        response.statusText, 
+        'API',
+        method,
+        url,
+        response.status,
+        response.statusText,
         responseBody,
         Object.fromEntries(response.headers.entries())
       );

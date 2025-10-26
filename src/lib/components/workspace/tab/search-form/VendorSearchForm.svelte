@@ -6,33 +6,33 @@
 
   let { tab } = $props();
 
-  let searchId = '';
-  let searchType = '';
-  let searchUuid = '';
-  let searchToken = '';
-  let searchLogin = '';
-  let searchSource = '';
-  let loading = false;
+  // Reactive state
+  let searchId = $state('');
+  let searchType = $state('');
+  let searchUuid = $state('');
+  let searchToken = $state('');
+  let searchLogin = $state('');
+  let searchSource = $state('');
+  let loading = $state(false);
 
   const limit = $workspaceStore.settings.defaultLimit;
 
-  // Правильный синтаксис для $derived в Svelte 5
+  // Derived values
   const inputPlaceholder = $derived(
-    searchId.trim() 
-      ? 'Searching by ID...' 
+    searchId.trim()
+      ? 'Searching by ID...'
       : 'Enter search criteria in fields below'
   );
-  
+
   const searchDisabled = $derived(
-    !searchId.trim() && 
-    !searchType.trim() && 
-    !searchUuid.trim() && 
-    !searchToken.trim() && 
-    !searchLogin.trim() && 
+    !searchId.trim() &&
+    !searchType.trim() &&
+    !searchUuid.trim() &&
+    !searchToken.trim() &&
+    !searchLogin.trim() &&
     !searchSource.trim()
   );
 
-  // Добавим отладочный derived для отслеживания состояния
   const debugState = $derived({
     searchId: searchId.trim(),
     searchType: searchType.trim(),
@@ -40,22 +40,21 @@
     searchToken: searchToken.trim(),
     searchLogin: searchLogin.trim(),
     searchSource: searchSource.trim(),
-    searchDisabled
+    searchDisabled,
+    workspaceStore
   });
 
-  // Логируем изменения
+  // Effects
   $effect(() => {
     console.log('🔍 Search form state:', debugState);
   });
 
+  // Methods
   async function handleSearch() {
-    // Если заполнено поле ID, ищем только по ID
     if (searchId.trim()) {
       await searchById();
       return;
     }
-
-    // Ищем по комбинации других полей
     await searchByMultipleFields();
   }
 
@@ -70,9 +69,8 @@
 
     try {
       const results = await vendorsApi.getById(searchId.trim());
-      
       const resultArray = Array.isArray(results) ? results : [results].filter(Boolean);
-      
+
       tabsStore.updateTab(tab.id, { 
         results: resultArray,
         searchParams: { 
@@ -86,7 +84,7 @@
         offset: resultArray.length,
         hasMore: false
       });
-      
+
       if (resultArray.length === 0) {
         toast.warning('No vendors found with this ID');
       } else {
@@ -102,7 +100,6 @@
   }
 
   async function searchByMultipleFields() {
-    // Проверяем, что хотя бы одно поле заполнено
     const hasSearchCriteria = searchType.trim() || 
                              searchUuid.trim() || 
                              searchToken.trim() || 
@@ -118,18 +115,19 @@
     tabsStore.updateTab(tab.id, { loading: true, error: null });
 
     try {
-      // Создаем объект параметров поиска - включаем только заполненные поля
-      const searchParams = {};
+      const searchParams = {
+        meta: {
+          userId: workspaceStore.selectedUser,
+          limit: limit,
+          offset: 0
+        }
+      };
       
       if (searchType.trim()) searchParams.type = searchType.trim();
       if (searchUuid.trim()) searchParams.uuid = searchUuid.trim();
       if (searchToken.trim()) searchParams.token = searchToken.trim();
       if (searchLogin.trim()) searchParams.login = searchLogin.trim();
       if (searchSource.trim()) searchParams.source = searchSource.trim();
-      
-      // Добавляем пагинацию
-      searchParams.limit = limit;
-      searchParams.offset = 0;
 
       console.log('🔍 Searching vendors with params:', searchParams);
 
@@ -171,7 +169,6 @@
       };
 
       const newResults = await vendorsApi.search(searchParams);
-      
       tabsStore.appendResults(tab.id, newResults, limit);
       
       if (newResults.length > 0) {
@@ -198,44 +195,12 @@
     searchLogin = '';
     searchSource = '';
     
-    // Также очищаем результаты поиска
     tabsStore.updateTab(tab.id, { 
       results: [],
       searchParams: {},
       offset: 0,
       hasMore: false
     });
-  }
-
-  // Функции для обновления значений полей
-  function updateSearchId(e) {
-    searchId = e.target.value;
-    console.log('🆔 ID updated:', searchId);
-  }
-
-  function updateSearchType(e) {
-    searchType = e.target.value;
-    console.log('📝 Type updated:', searchType);
-  }
-
-  function updateSearchUuid(e) {
-    searchUuid = e.target.value;
-    console.log('🔑 UUID updated:', searchUuid);
-  }
-
-  function updateSearchToken(e) {
-    searchToken = e.target.value;
-    console.log('🎫 Token updated:', searchToken);
-  }
-
-  function updateSearchLogin(e) {
-    searchLogin = e.target.value;
-    console.log('👤 Login updated:', searchLogin);
-  }
-
-  function updateSearchSource(e) {
-    searchSource = e.target.value;
-    console.log('📦 Source updated:', searchSource);
   }
 </script>
 
@@ -245,7 +210,7 @@
     <sl-input
       placeholder="Enter Vendor ID"
       value={searchId}
-      on:input={updateSearchId}
+      on:input={(e) => searchId = e.target.value}
       on:keypress={handleKeyPress}
     >
       <sl-icon slot="prefix" name="tag"></sl-icon>
@@ -263,7 +228,7 @@
       <sl-input
         placeholder="Type"
         value={searchType}
-        on:input={updateSearchType}
+        on:input={(e) => searchType = e.target.value}
         on:keypress={handleKeyPress}
       >
         <sl-icon slot="prefix" name="type"></sl-icon>
@@ -272,7 +237,7 @@
       <sl-input
         placeholder="UUID"
         value={searchUuid}
-        on:input={updateSearchUuid}
+        on:input={(e) => searchUuid = e.target.value}
         on:keypress={handleKeyPress}
       >
         <sl-icon slot="prefix" name="file-binary"></sl-icon>
@@ -281,7 +246,7 @@
       <sl-input
         placeholder="Token"
         value={searchToken}
-        on:input={updateSearchToken}
+        on:input={(e) => searchToken = e.target.value}
         on:keypress={handleKeyPress}
       >
         <sl-icon slot="prefix" name="key"></sl-icon>
@@ -290,7 +255,7 @@
       <sl-input
         placeholder="Login"
         value={searchLogin}
-        on:input={updateSearchLogin}
+        on:input={(e) => searchLogin = e.target.value}
         on:keypress={handleKeyPress}
       >
         <sl-icon slot="prefix" name="person"></sl-icon>
@@ -299,7 +264,7 @@
       <sl-input
         placeholder="Source"
         value={searchSource}
-        on:input={updateSearchSource}
+        on:input={(e) => searchSource = e.target.value}
         on:keypress={handleKeyPress}
       >
         <sl-icon slot="prefix" name="database"></sl-icon>
@@ -307,7 +272,6 @@
     </div>
     <div class="section-note">{inputPlaceholder}</div>
     
-    <!-- Отладочная информация -->
     <div class="debug-info" style="font-size: 0.7rem; color: #666; margin-top: 0.5rem;">
       Debug: {JSON.stringify(debugState)}
     </div>

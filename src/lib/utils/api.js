@@ -72,7 +72,8 @@ export const usersApi = {
 };
 
 export const vendorsApi = {
-  search: (uuid) => api.post(`vendors/getVendor?slug=${uuid}`),
+  search: (params) => api.post('supervisor/vendorSearch', params),
+  //search: (uuid) => api.post(`vendors/getVendor?slug=${uuid}`),
   getByUuid: (uuid) => api.post(`vendors/getVendor?slug=${uuid}`),
 };
 
