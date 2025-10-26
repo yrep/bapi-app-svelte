@@ -13,6 +13,7 @@
   let searchVendorToId = $state('');
   let searchEnable = $state('');
   let loading = $state(false);
+  let hasAutoSearched = $state(false);
 
   const limit = $workspaceStore.settings.defaultLimit;
 
@@ -49,6 +50,36 @@
     });
   });
 
+  $effect(() => {
+    // Берем searchParams из вложенной структуры
+    const params = tab.searchParams?.searchParams || tab.searchParams;
+    
+    if (params && Object.keys(params).length > 0 && !hasAutoSearched) {
+      console.log('🔄 Filling bind form from searchParams:', params);
+      hasAutoSearched = true;
+
+      if (params.id) searchId = params.id;
+      if (params.uuid) searchUuid = params.uuid;
+      if (params.vendor_from_id) searchVendorFromId = params.vendor_from_id;
+      if (params.vendor_to_id) searchVendorToId = params.vendor_to_id;
+      if (params.enable !== undefined && params.enable !== null) {
+        searchEnable = params.enable.toString();
+      }
+      
+      console.log('📝 Bind form fields after filling:', {
+        searchId, searchUuid, searchVendorFromId, searchVendorToId, searchEnable
+      });
+      
+      setTimeout(() => {
+        if (!searchDisabled && !loading) {
+          console.log('🔍 Auto-searching binds with filled form');
+          handleSearch();
+        } else {
+          console.log('❌ Cannot auto-search binds:', { searchDisabled, loading });
+        }
+      }, 100);
+    }
+  });
   // Methods
   async function handleSearch() {
     if (searchDisabled) {

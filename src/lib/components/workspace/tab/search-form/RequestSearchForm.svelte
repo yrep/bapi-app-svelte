@@ -1,18 +1,15 @@
 <script>
   import { tabsStore } from '$lib/stores/tabs.js';
   import { workspaceStore } from '$lib/stores/workspace.js';
-  import { tasksApi } from '$lib/utils/api.js';
+  import { requestsApi } from '$lib/utils/api.js'; // ← изменил импорт API
   import { toast } from '$lib/stores/toast.js';
   import DateRangePicker from '$lib/components/DateRangePicker.svelte';
   import { DEBUG, dlog } from '$lib/utils/debug.js';
 
   let { tab } = $props();
 
-  // Reactive state - теперь строки для MySQL формата
   let searchId = $state('');
-  let searchBindId = $state('');
-  let searchHookId = $state('');
-  let searchState = $state('');
+  let searchTaskId = $state('');
   let searchDateFrom = $state('');
   let searchDateTo = $state('');
   let loading = $state(false);
@@ -23,22 +20,17 @@
   // Derived values
   const hasSearchCriteria = $derived(
     searchId.trim().length > 0 ||
-    searchBindId.trim().length > 0 ||
-    searchHookId.trim().length > 0 ||
-    searchState.trim().length > 0 ||
+    searchTaskId.trim().length > 0 ||
     searchDateFrom.length > 0 ||
     searchDateTo.length > 0
   );
 
-  // Функция для дополнения времени
   function completeTime(dateStr, isFrom = true) {
     if (!dateStr) return dateStr;
     
-    // Если только дата (YYYY-MM-DD)
     if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
       return isFrom ? `${dateStr} 00:00:00` : `${dateStr} 23:59:59`;
     }
-    // Если дата и время без секунд (YYYY-MM-DD HH:mm)
     else if (dateStr.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/)) {
       return isFrom ? `${dateStr}:00` : `${dateStr}:59`;
     }
@@ -58,14 +50,12 @@
     const params = tab.searchParams?.searchParams || tab.searchParams;
     
     if (params && Object.keys(params).length > 0 && !hasAutoSearched) {
-      console.log('🔄 Filling task form from searchParams:', params);
+      console.log('🔄 Filling request form from searchParams:', params); // ← изменил текст
       hasAutoSearched = true;
       
       // Заполняем поля формы из searchParams
       if (params.id) searchId = params.id;
-      if (params.bind_id) searchBindId = params.bind_id;
-      if (params.hook_id) searchHookId = params.hook_id;
-      if (params.state) searchState = params.state;
+      if (params.task_id) searchTaskId = params.task_id; // ← изменил поле
       if (params.dt_ins_from) searchDateFrom = params.dt_ins_from;
       if (params.dt_ins_to) searchDateTo = params.dt_ins_to;
     }
@@ -74,11 +64,9 @@
   // Дебаг стейта
   $effect(() => {
     if (DEBUG) {
-      console.log('🔍 TASK SEARCH STATE:', {
+      console.log('🔍 REQUEST SEARCH STATE:', { // ← изменил текст
         searchId,
-        searchBindId,
-        searchHookId,
-        searchState,
+        searchTaskId, // ← изменил поле
         searchDateFrom,
         searchDateTo,
         hasSearchCriteria
@@ -98,9 +86,7 @@
     
     // Добавляем параметры поиска с дополнением времени
     if (searchId.trim()) searchParams.id = searchId.trim();
-    if (searchBindId.trim()) searchParams.bind_id = searchBindId.trim();
-    if (searchHookId.trim()) searchParams.hook_id = searchHookId.trim();
-    if (searchState.trim()) searchParams.state = searchState.trim();
+    if (searchTaskId.trim()) searchParams.task_id = searchTaskId.trim(); // ← изменил поле
     if (searchDateFrom) searchParams.dt_ins_from = completeTime(searchDateFrom, true);
     if (searchDateTo) searchParams.dt_ins_to = completeTime(searchDateTo, false);
 
@@ -119,12 +105,12 @@
     try {
       const searchParams = buildSearchParams();
 
-      console.log('🔍 Searching tasks with params:', searchParams);
+      console.log('🔍 Searching requests with params:', searchParams); // ← изменил текст
 
-      const response = await tasksApi.search(searchParams);
-      const results = response.tasks || [];
+      const response = await requestsApi.search(searchParams); // ← изменил API
+      const results = response.requests || []; // ← изменил поле
 
-      console.log('✅ Task search results:', results);
+      console.log('✅ Request search results:', results); // ← изменил текст
 
       tabsStore.updateTab(tab.id, {
         results,
@@ -134,14 +120,14 @@
       });
       
       if (results.length === 0) {
-        toast.warning('No tasks found');
+        toast.warning('No requests found'); // ← изменил текст
       } else {
-        toast.success(`Found ${results.length} task(s)`);
+        toast.success(`Found ${results.length} request(s)`); // ← изменил текст
       }
     } catch (error) {
-      console.error('❌ Task search error:', error);
+      console.error('❌ Request search error:', error); // ← изменил текст
       tabsStore.updateTab(tab.id, { error });
-      toast.error(error.message || 'Task search failed');
+      toast.error(error.message || 'Request search failed'); // ← изменил текст
     } finally {
       loading = false;
       tabsStore.updateTab(tab.id, { loading: false });
@@ -162,17 +148,16 @@
         }
       };
 
-      const response = await tasksApi.search(searchParams);
-      const newResults = response.tasks || [];
+      const response = await requestsApi.search(searchParams);
+      const newResults = response.requests || [];
       
       tabsStore.appendResults(tab.id, newResults, limit);
       
       if (newResults.length > 0) {
-        toast.success(`Loaded ${newResults.length} more tasks`);
+        toast.success(`Loaded ${newResults.length} more requests`);
       }
     } catch (error) {
-      toast.error(error.message || 'Failed to load more tasks');
-    } finally {
+      toast.error(error.message || 'Failed to load more requests');
       loading = false;
     }
   }
@@ -185,15 +170,13 @@
 
   function clearForm() {
     searchId = '';
-    searchBindId = '';
-    searchHookId = '';
-    searchState = '';
+    searchTaskId = '';
     searchDateFrom = '';
     searchDateTo = '';
     updateStore();
   }
 
-  // Quick time range functions
+
   function setQuickRange(hours) {
     const to = new Date();
     const from = new Date(to.getTime() - (hours * 60 * 60 * 1000));
@@ -224,7 +207,6 @@
     updateStore();
   }
 
-  // Функция для преобразования Date в MySQL формат
   function toMySQLFormat(date) {
     if (!date) return '';
     const d = new Date(date);
@@ -239,16 +221,13 @@
 </script>
 
 <div class="search-form">
-  <!-- Дебаг информация -->
   {#if DEBUG}
     <div class="debug-info">
       <h4>🔍 Debug State</h4>
       <pre>{
         JSON.stringify({
           searchId,
-          searchBindId,
-          searchHookId,
-          searchState,
+          searchTaskId,
           searchDateFrom,
           searchDateTo,
           hasSearchCriteria
@@ -258,10 +237,10 @@
   {/if}
 
   <div class="search-section">
-    <h4>Search Tasks</h4>
+    <h4>Search Requests</h4>
     <div class="search-grid">
       <sl-input
-        placeholder="Task ID"
+        placeholder="Request ID"
         value={searchId}
         on:input={(e) => {
           searchId = e.target.value;
@@ -273,10 +252,10 @@
       </sl-input>
 
       <sl-input
-        placeholder="Bind ID"
-        value={searchBindId}
+        placeholder="Task ID"
+        value={searchTaskId}
         on:input={(e) => {
-          searchBindId = e.target.value;
+          searchTaskId = e.target.value;
           updateStore();
         }}
         on:keypress={handleKeyPress}
@@ -284,32 +263,7 @@
         <sl-icon slot="prefix" name="link"></sl-icon>
       </sl-input>
 
-      <sl-input
-        placeholder="Hook ID"
-        value={searchHookId}
-        on:input={(e) => {
-          searchHookId = e.target.value;
-          updateStore();
-        }}
-        on:keypress={handleKeyPress}
-      >
-        <sl-icon slot="prefix" name="code"></sl-icon>
-      </sl-input>
-
-      <sl-input
-        placeholder="State"
-        value={searchState}
-        on:input={(e) => {
-          searchState = e.target.value;
-          updateStore();
-        }}
-        on:keypress={handleKeyPress}
-      >
-        <sl-icon slot="prefix" name="circle"></sl-icon>
-      </sl-input>
-
       <div class="date-range-section">
-        <!-- Двухстороннее связывание через $bindable -->
         <DateRangePicker
           bind:startDate={searchDateFrom}
           bind:endDate={searchDateTo}
@@ -357,20 +311,21 @@
       on:click={handleSearch}
     >
       <sl-icon slot="prefix" name="search"></sl-icon>
-      Search Tasks
+      Search Requests <!-- ← изменил текст -->
     </sl-button>
   </div>
 
   {#if tab.hasMore}
     <div class="load-more">
       <sl-button variant="default" on:click={handleLoadMore} loading={loading}>
-        Load more tasks...
+        Load more requests... <!-- ← изменил текст -->
       </sl-button>
     </div>
   {/if}
 </div>
 
 <style>
+  /* Стили остаются такими же */
   .search-form {
     margin-bottom: 1rem;
   }

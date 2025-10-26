@@ -13,7 +13,6 @@
 
   let workspace = null;
 
-  // Отладка tabsStore
   $: {
     console.log('🔴 Workspace page - tabsStore updated:', {
       tabsCount: $tabsStore.length,
@@ -23,9 +22,8 @@
   }
 
   onMount(() => {
-    console.log('=== WORKSPACE PAGE MOUNTED ===');
     workspace = $workspaces.find(w => w.id === $page.params.id);
-    
+
     if (!workspace) {
       toast.error('Workspace not found');
       goto('/');
@@ -44,13 +42,13 @@
 {#if workspace}
   <div class="workspace-page">
     <WorkspaceHeader {workspace} />
-    <TabsBar /> <!-- ← ИСПОЛЬЗУЕМ НОВЫЙ КОМПОНЕНТ -->
+    <TabsBar />
     
     <main class="main">
       <div class="tab-content-area">
         {#each $tabsStore as tab (tab.id)}
           {#if tab.active}
-            <Tab {tab} /> <!-- ← Переименовали TabContent в Tab -->
+            <Tab {tab} />
           {/if}
         {/each}
       </div>

@@ -160,6 +160,10 @@ export const tasksApi = {
   search: (params) => api.post('supervisor/taskSearch', params),
 };
 
+export const requestsApi = {
+  search: (params) => api.post('supervisor/requestSearch', params),
+};
+
 export const entityApi = {
   search: (entityType, params = {}) => {
     switch (entityType) {

@@ -134,9 +134,10 @@ const entityConfigs = {
         fetchButton: true
       },
       bind_id: {
-        component: 'TextField',
+        component: 'EntityField',
         editable: false,
-        fetchButton: false
+        fetchButton: true,
+        fetchEntity: 'bind'
       },
       hook_id: {
         component: 'TextField',
@@ -152,23 +153,41 @@ const entityConfigs = {
         editable: false
       }
     },
-    brief: ['id', 'title']
+    brief: ['id', 'bind_id', 'state']
   },
   request: {
     displayName: 'Request',
-    searchForm: 'BaseSearchForm',
+    searchForm: 'RequestSearchForm',
     fields: {
       id: {
         component: 'TextField',
         editable: false,
         fetchButton: true
       },
-      type: {
+      dt_ins: {
         component: 'TextField',
         editable: false
-      }
+      },
+      task_id: {
+        component: 'EntityField',
+        editable: false,
+        fetchButton: true,
+        fetchEntity: 'task'
+      },
+      request: {
+        component: 'TextField',
+        editable: false
+      },
+      response: {
+        component: 'TextField',
+        editable: false
+      },
+      response_headers: {
+        component: 'TextField',
+        editable: false
+      },
     },
-    brief: ['id', 'type']
+    brief: ['id', 'task_id', 'request']
   }
 };
 
@@ -180,5 +199,4 @@ export function getEntityConfig(entityType) {
   };
 }
 
-// Экспортируем также entityConfigs если нужно
 export { entityConfigs };

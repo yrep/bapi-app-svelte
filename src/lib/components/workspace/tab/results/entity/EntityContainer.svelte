@@ -84,6 +84,22 @@
             {isSelectedUser() ? 'Selected' : 'Select'}
           </sl-button>
         {/if}
+
+        {#if entityType === 'task'}
+          <sl-button 
+            size="small"
+            variant="default"
+            on:click={() => {
+              import('$lib/stores/tabs.js').then(({ tabsStore }) => {
+                tabsStore.addTab('request', { task_id: entity.id });
+              });
+            }}
+          >
+            <sl-icon slot="prefix" name="link"></sl-icon>
+            Requests
+          </sl-button>
+        {/if}
+
       </div>
     </div>
   {:else}
@@ -99,7 +115,7 @@
           {#if entity[fieldName] !== undefined}
             <div class="field">
               <span class="field-name">{fieldName}:</span>
-              <div class="field-value-container">
+              <div class="field-value-container field-value--copyable">
                 {#if config.fields[fieldName]?.component === 'EntityContainer' && typeof entity[fieldName] === 'object' && entity[fieldName] !== null}
                   <NestedEntityField
                     entity={entity[fieldName]}
@@ -107,19 +123,28 @@
                     nested={true}
                   />
                 {:else if config.fields[fieldName]?.component === 'BoolFieldIcon'}
-                  <BoolFieldIcon value={entity[fieldName]} />
+                  <div class="field-value--copyable" on:click={() => copyFieldValue(entity[fieldName], fieldName)}>
+                    <BoolFieldIcon value={entity[fieldName]} />
+                  </div>
                 {:else if config.fields[fieldName]?.component === 'TextField'}
-                  <TextField value={entity[fieldName]} />
+                  <div class="field-value--copyable" on:click={() => copyFieldValue(entity[fieldName], fieldName)}>
+                    <TextField value={entity[fieldName]} />
+                  </div>
                 {:else if config.fields[fieldName]?.component === 'NumberField'}
-                  <NumberField value={entity[fieldName]} />
+                  <div class="field-value--copyable" on:click={() => copyFieldValue(entity[fieldName], fieldName)}>
+                    <NumberField value={entity[fieldName]} />
+                  </div>
                 {:else if config.fields[fieldName]?.component === 'EntityField'}
-                  <EntityField 
-                    value={entity[fieldName]} 
-                    fieldConfig={config.fields[fieldName]}
-                    fieldName={fieldName}
-                  />
+                  <div class="field-value--copyable" on:click={() => copyFieldValue(entity[fieldName], fieldName)}>
+                    <EntityField 
+                      value={entity[fieldName]} 
+                      fieldConfig={config.fields[fieldName]}
+                      fieldName={fieldName}
+                    />
+                  </div>
                 {:else if config.fields[fieldName]?.component === 'JsonField'}
-                  <JsonField value={entity[fieldName]} />
+                  <JsonField value={entity[fieldName]
+                  } />
                 {:else}
                   <span 
                     class="field-value field-value--copyable" 

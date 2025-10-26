@@ -1,8 +1,7 @@
 <script>
-  export let value;
+  let { value } = $props();
   
-  // Преобразуем различные форматы boolean значений
-  $: booleanValue = value === '1' || value === 1 || value === true || value === 'true';
+  let booleanValue = $derived(value === '1' || value === 1 || value === true || value === 'true');
 </script>
 
 <sl-icon 

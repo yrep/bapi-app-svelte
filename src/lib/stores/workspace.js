@@ -34,7 +34,7 @@ function createWorkspaceStore() {
           workspaceType: state.workspaceType,
           settings: state.settings,
           selectedUser: state.selectedUser,
-          tabChain: $tabsStore.map(tab => ({
+          tabChain: tabsStore.map(tab => ({
             id: tab.id,
             entityType: tab.entityType,
             searchParams: tab.searchParams,
@@ -56,12 +56,16 @@ function createWorkspaceStore() {
         currentWorkspace: workspace,
         workspaceType: type,
         settings: { ...workspaceConfig.settings, ...state.settings },
-        selectedUser: null // ← СБРАСЫВАЕМ ПРИ СМЕНЕ WORKSPACE
+        selectedUser: null
       }));
 
-      // Создаем начальный таб для этого типа workspace
       if (workspaceConfig.initialEntity) {
-        tabsStore.addTab(workspaceConfig.initialEntity, {});
+        tabsStore.subscribe(tabs => {
+          const userTabExists = tabs.some(tab => tab.entityType === 'user');
+          if (!userTabExists) {
+            tabsStore.addTab(workspaceConfig.initialEntity, {});
+          }
+        })();
       }
     },
     updateSettings: (newSettings) => {
