@@ -5,6 +5,7 @@
   import BaseSearchForm from './search-form/BaseSearchForm.svelte';
   import UserSearchForm from './search-form/_UserSearchForm.svelte';
   import VendorSearchForm from './search-form/VendorSearchForm.svelte';
+  import BindSearchForm from './search-form/BindSearchForm.svelte';
   import EntityList from './results/EntityList.svelte';
 
   export let tab;
@@ -15,14 +16,15 @@
       id: tab?.id,
       entityType: tab?.entityType,
       resultsCount: tab?.results?.length,
-      results: tab?.results
+      results: tab?.results?.slice(0, 2) // Показываем только первые 2 результата для отладки
     });
   }
 
   const searchFormComponents = {
     BaseSearchForm,
     UserSearchForm,
-    VendorSearchForm
+    VendorSearchForm,
+    BindSearchForm
   };
 
   const config = getEntityConfig(tab.entityType);
@@ -30,6 +32,8 @@
 
   async function handleLoadMore() {
     console.log('Load more for tab:', tab.id);
+    // Добавь вызов соответствующего метода из tabsStore
+    // tabsStore.loadMore(tab.id);
   }
 </script>
 
@@ -38,14 +42,24 @@
     ✅ Tab Active: {tab.entityType} - Results: {tab.results?.length || 0}
   </div>
   
+  <div style="background: lightblue; padding: 10px; margin-bottom: 10px;">
+    <strong>Config fields:</strong> {JSON.stringify(Object.keys(config.fields || {}), null, 2)}
+  </div>
+  
   <SearchFormComponent {tab} />
   
-  <EntityList
-    entities={tab.results || []}
-    entityType={tab.entityType}
-    loading={tab.loading}
-    onLoadMore={tab.hasMore ? handleLoadMore : null}
-  />
+  {#if tab.results}
+    <EntityList
+      entities={tab.results}
+      entityType={tab.entityType}
+      loading={tab.loading}
+      onLoadMore={tab.hasMore ? handleLoadMore : null}
+    />
+  {:else}
+    <div style="color: red; padding: 10px;">
+      ❌ Results is undefined or null
+    </div>
+  {/if}
 </div>
 
 <style>

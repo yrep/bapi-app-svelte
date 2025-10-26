@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { derived } from 'svelte/store';
   import { tabsStore } from '$lib/stores/tabs.js';
-  import { workspaceStore } from '$lib/stores/_workspace.js';
+  import { workspaceStore } from '$lib/stores/workspace.js';
 
   let tabsContainer;
   let scrollableArea;

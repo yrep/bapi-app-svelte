@@ -63,13 +63,21 @@ const entityConfigs = {
       login: {
         component: 'TextField',
         editable: false
+      },
+      source: {
+        component: 'TextField',
+        editable: false
+      },
+      enable: {
+        component: 'BoolFieldIcon',
+        editable: false
       }
     },
-    brief: ['id', 'name']
+    brief: ['id', 'type', 'login']
   },
   bind: {
     displayName: 'Binds',
-    searchForm: 'BaseSearchForm',
+    searchForm: 'BindSearchForm',
     fields: {
       id: {
         component: 'TextField',
@@ -87,13 +95,29 @@ const entityConfigs = {
         fetchEntity: 'vendor'
       },
       vendor_to_id: {
-        component: 'TextField', 
+        component: 'TextField',
         editable: false,
         fetchButton: true,
         fetchEntity: 'vendor'
+      },
+      enable: {
+        component: 'BoolFieldIcon',
+        editable: false,
+      },
+      vendor_from: {
+        component: 'EntityContainer',
+        entityType: 'vendor',
+        editable: false,
+        fetchButton: false,
+      },
+      vendor_to: {
+        component: 'EntityContainer',
+        entityType: 'vendor',
+        editable: false,
+        fetchButton: false,
       }
     },
-    brief: ['id', 'user_id', 'vendor_id']
+    brief: ['id', 'vendor_from_id', 'vendor_to_id']
   },
   task: {
     displayName: 'Tasks',

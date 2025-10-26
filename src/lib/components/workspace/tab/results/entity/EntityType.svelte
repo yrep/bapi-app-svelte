@@ -6,7 +6,6 @@
   export let loading = false;
   export let onLoadMore = null;
 
-  // Отладка
   $: console.log('✅ EntityList with BoolFieldIcon:', { 
     entityType, 
     entitiesCount: entities?.length,

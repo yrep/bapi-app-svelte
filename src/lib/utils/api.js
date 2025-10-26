@@ -1,4 +1,26 @@
+import { DEBUG, dlog, setupTestUser } from '$lib/utils/debug.js';
+import { get } from 'svelte/store';
+import { workspaceStore } from '$lib/stores/workspace.js';
+
 const API_BASE = '/api';
+
+function getCurrentSelectedUser() {
+  try {
+    return get(workspaceStore).selectedUser;
+  } catch (error) {
+    console.warn('Cannot get selected user:', error);
+    return null;
+  }
+}
+
+
+
+export const authApi = {
+  login: (userKey) => api.post('auth', { userKey }),
+  logout: () => api.delete('auth'),
+  check: () => api.get('auth'),
+  refresh: () => api.post('auth/refresh', {})
+};
 
 async function handleApiResponse(response) {
   const responseClone = response.clone();
@@ -26,6 +48,9 @@ async function handleApiResponse(response) {
 export const api = {
   request: async (method, path, data = null) => {
     const url = `${API_BASE}/${path}`;
+
+    const selectedUser = getCurrentSelectedUser();
+
     const options = {
       method,
       headers: {
@@ -35,8 +60,17 @@ export const api = {
     };
 
     if (data && (method === 'POST' || method === 'PUT')) {
-      options.body = JSON.stringify(data);
+      options.body = JSON.stringify({
+        ...data,
+        meta: {
+          user_id: selectedUser?.id || null
+        }
+      });
     }
+
+    dlog('Request from api.js');
+    dlog(url);
+    dlog(options);
 
     const response = await fetch(url, options);
     return handleApiResponse(response);
@@ -54,7 +88,7 @@ export const api = {
 };
 
 export const brandsApi = {
-  list: () => api.get('brands'),
+  list: () => api.get('brands/'),
   getBySlug: (slug) => api.get(`brands/getBrandBySlug?slug=${slug}`)
 };
 
@@ -73,8 +107,13 @@ export const usersApi = {
 
 export const vendorsApi = {
   search: (params) => api.post('supervisor/vendorSearch', params),
+  getById: (params) => api.post('supervisor/vendorSearch', params),
   //search: (uuid) => api.post(`vendors/getVendor?slug=${uuid}`),
   getByUuid: (uuid) => api.post(`vendors/getVendor?slug=${uuid}`),
+};
+
+export const bindsApi = {
+  search: (params) => api.post('supervisor/bindSearch', params),
 };
 
 export const entityApi = {

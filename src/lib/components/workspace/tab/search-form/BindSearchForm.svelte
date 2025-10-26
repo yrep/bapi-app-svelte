@@ -1,18 +1,17 @@
 <script>
   import { tabsStore } from '$lib/stores/tabs.js';
   import { workspaceStore } from '$lib/stores/workspace.js';
-  import { vendorsApi } from '$lib/utils/api.js';
+  import { bindsApi } from '$lib/utils/api.js';
   import { toast } from '$lib/stores/toast.js';
 
   let { tab } = $props();
 
   // Reactive state
   let searchId = $state('');
-  let searchType = $state('');
   let searchUuid = $state('');
-  let searchToken = $state('');
-  let searchLogin = $state('');
-  let searchSource = $state('');
+  let searchVendorFromId = $state('');
+  let searchVendorToId = $state('');
+  let searchEnable = $state('');
   let loading = $state(false);
 
   const limit = $workspaceStore.settings.defaultLimit;
@@ -20,11 +19,10 @@
   // Derived values
   const hasId = $derived(searchId.trim().length > 0);
   const hasOtherFields = $derived(
-    searchType.trim().length > 0 ||
     searchUuid.trim().length > 0 ||
-    searchToken.trim().length > 0 ||
-    searchLogin.trim().length > 0 ||
-    searchSource.trim().length > 0
+    searchVendorFromId.trim().length > 0 ||
+    searchVendorToId.trim().length > 0 ||
+    searchEnable.trim().length > 0
   );
 
   const searchDisabled = $derived(!hasId && !hasOtherFields);
@@ -34,21 +32,20 @@
       ? 'Searching by ID (other fields disabled)' 
       : hasOtherFields
         ? 'Searching by multiple criteria'
-        : 'Enter Vendor ID or other search criteria'
+        : 'Enter Bind ID or other search criteria'
   );
 
   // Effects
   $effect(() => {
-    console.log('🔍 Search form state:', {
+    console.log('🔍 Bind search form state:', {
       hasId,
       hasOtherFields,
       searchDisabled,
       searchId: searchId.trim(),
-      searchType: searchType.trim(),
       searchUuid: searchUuid.trim(),
-      searchToken: searchToken.trim(),
-      searchLogin: searchLogin.trim(),
-      searchSource: searchSource.trim()
+      searchVendorFromId: searchVendorFromId.trim(),
+      searchVendorToId: searchVendorToId.trim(),
+      searchEnable: searchEnable.trim()
     });
   });
 
@@ -73,19 +70,26 @@
       
       // Добавляем параметры поиска
       if (hasId) searchParams.id = searchId.trim();
-      if (searchType.trim()) searchParams.type = searchType.trim();
       if (searchUuid.trim()) searchParams.uuid = searchUuid.trim();
-      if (searchToken.trim()) searchParams.token = searchToken.trim();
-      if (searchLogin.trim()) searchParams.login = searchLogin.trim();
-      if (searchSource.trim()) searchParams.source = searchSource.trim();
+      if (searchVendorFromId.trim()) searchParams.vendor_from_id = searchVendorFromId.trim();
+      if (searchVendorToId.trim()) searchParams.vendor_to_id = searchVendorToId.trim();
+      if (searchEnable.trim()) {
+        // Преобразуем строковое значение в boolean для поля enable
+        const enableValue = searchEnable.trim().toLowerCase();
+        if (enableValue === 'true' || enableValue === '1' || enableValue === 'yes') {
+          searchParams.enable = true;
+        } else if (enableValue === 'false' || enableValue === '0' || enableValue === 'no') {
+          searchParams.enable = false;
+        }
+      }
 
-      console.log('🔍 Searching vendors with params:', searchParams);
+      console.log('🔍 Searching binds with params:', searchParams);
 
-      const response = await vendorsApi.search(searchParams);
+      const response = await bindsApi.search(searchParams);
 
       console.log('✅ Search response:', response);
 
-      const results = response.vendors || [];
+      const results = response.binds || [];
 
       console.log('✅ Search results:', results);
 
@@ -97,9 +101,9 @@
       });
       
       if (results.length === 0) {
-        toast.warning('No vendors found');
+        toast.warning('No binds found');
       } else {
-        toast.success(`Found ${results.length} vendor(s)`);
+        toast.success(`Found ${results.length} bind(s)`);
       }
     } catch (error) {
       console.error('❌ Search error:', error);
@@ -118,18 +122,23 @@
     try {
       const searchParams = {
         ...tab.searchParams,
-        limit,
-        offset: tab.offset
+        meta: {
+          ...tab.searchParams.meta,
+          limit,
+          offset: tab.offset
+        }
       };
 
-      const newResults = await vendorsApi.search(searchParams);
+      const response = await bindsApi.search(searchParams);
+      const newResults = response.binds || [];
+      
       tabsStore.appendResults(tab.id, newResults, limit);
       
       if (newResults.length > 0) {
-        toast.success(`Loaded ${newResults.length} more vendors`);
+        toast.success(`Loaded ${newResults.length} more binds`);
       }
     } catch (error) {
-      toast.error(error.message || 'Failed to load more vendors');
+      toast.error(error.message || 'Failed to load more binds');
     } finally {
       loading = false;
     }
@@ -143,11 +152,10 @@
 
   function clearForm() {
     searchId = '';
-    searchType = '';
     searchUuid = '';
-    searchToken = '';
-    searchLogin = '';
-    searchSource = '';
+    searchVendorFromId = '';
+    searchVendorToId = '';
+    searchEnable = '';
     
     tabsStore.updateTab(tab.id, { 
       results: [],
@@ -156,30 +164,31 @@
       hasMore: false
     });
   }
+
+  // Функции для выборки сущностей (если нужны)
+  function fetchVendorFrom() {
+    // Реализация выборки vendor_from
+    console.log('Fetch vendor_from implementation needed');
+  }
+
+  function fetchVendorTo() {
+    // Реализация выборки vendor_to  
+    console.log('Fetch vendor_to implementation needed');
+  }
 </script>
 
 <div class="search-form">
   <div class="search-section">
-    <h4>Search Vendors</h4>
+    <h4>Search Binds</h4>
     <div class="search-grid">
       <sl-input
-        placeholder="Vendor ID"
+        placeholder="Bind ID"
         value={searchId}
         on:input={(e) => searchId = e.target.value}
         on:keypress={handleKeyPress}
         disabled={hasOtherFields}
       >
         <sl-icon slot="prefix" name="tag"></sl-icon>
-      </sl-input>
-
-      <sl-input
-        placeholder="Type"
-        value={searchType}
-        on:input={(e) => searchType = e.target.value}
-        on:keypress={handleKeyPress}
-        disabled={hasId}
-      >
-        <sl-icon slot="prefix" name="type"></sl-icon>
       </sl-input>
 
       <sl-input
@@ -192,35 +201,56 @@
         <sl-icon slot="prefix" name="file-binary"></sl-icon>
       </sl-input>
 
-      <sl-input
-        placeholder="Token"
-        value={searchToken}
-        on:input={(e) => searchToken = e.target.value}
-        on:keypress={handleKeyPress}
-        disabled={hasId}
-      >
-        <sl-icon slot="prefix" name="key"></sl-icon>
-      </sl-input>
+      <div class="input-with-button">
+        <sl-input
+          placeholder="Vendor From ID"
+          value={searchVendorFromId}
+          on:input={(e) => searchVendorFromId = e.target.value}
+          on:keypress={handleKeyPress}
+          disabled={hasId}
+        >
+          <sl-icon slot="prefix" name="arrow-left-circle"></sl-icon>
+        </sl-input>
+        <sl-tooltip content="Fetch vendor">
+          <sl-icon-button 
+            name="search" 
+            label="Fetch vendor"
+            on:click={fetchVendorFrom}
+            disabled={hasId}
+          ></sl-icon-button>
+        </sl-tooltip>
+      </div>
 
-      <sl-input
-        placeholder="Login"
-        value={searchLogin}
-        on:input={(e) => searchLogin = e.target.value}
-        on:keypress={handleKeyPress}
-        disabled={hasId}
-      >
-        <sl-icon slot="prefix" name="person"></sl-icon>
-      </sl-input>
+      <div class="input-with-button">
+        <sl-input
+          placeholder="Vendor To ID"
+          value={searchVendorToId}
+          on:input={(e) => searchVendorToId = e.target.value}
+          on:keypress={handleKeyPress}
+          disabled={hasId}
+        >
+          <sl-icon slot="prefix" name="arrow-right-circle"></sl-icon>
+        </sl-input>
+        <sl-tooltip content="Fetch vendor">
+          <sl-icon-button 
+            name="search" 
+            label="Fetch vendor"
+            on:click={fetchVendorTo}
+            disabled={hasId}
+          ></sl-icon-button>
+        </sl-tooltip>
+      </div>
 
-      <sl-input
-        placeholder="Source"
-        value={searchSource}
-        on:input={(e) => searchSource = e.target.value}
-        on:keypress={handleKeyPress}
+      <sl-select
+        placeholder="Enable Status"
+        value={searchEnable}
+        on:sl-change={(e) => searchEnable = e.target.value}
         disabled={hasId}
       >
-        <sl-icon slot="prefix" name="database"></sl-icon>
-      </sl-input>
+        <sl-menu-item value="">Any</sl-menu-item>
+        <sl-menu-item value="true">Enabled</sl-menu-item>
+        <sl-menu-item value="false">Disabled</sl-menu-item>
+      </sl-select>
     </div>
     <div class="section-note">{inputPlaceholder}</div>
   </div>
@@ -238,14 +268,14 @@
       on:click={handleSearch}
     >
       <sl-icon slot="prefix" name="search"></sl-icon>
-      Search Vendors
+      Search Binds
     </sl-button>
   </div>
 
   {#if tab.hasMore}
     <div class="load-more">
       <sl-button variant="default" on:click={handleLoadMore} loading={loading}>
-        Load more vendors...
+        Load more binds...
       </sl-button>
     </div>
   {/if}
@@ -276,8 +306,18 @@
 
   .search-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 0.5rem;
+  }
+
+  .input-with-button {
+    display: flex;
+    gap: 0.25rem;
+    align-items: flex-start;
+  }
+
+  .input-with-button sl-input {
+    flex: 1;
   }
 
   .form-actions {
@@ -303,6 +343,10 @@
     }
 
     .form-actions {
+      flex-direction: column;
+    }
+
+    .input-with-button {
       flex-direction: column;
     }
   }

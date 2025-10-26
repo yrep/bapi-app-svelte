@@ -1,8 +1,9 @@
 <script>
   import { tabsStore } from '$lib/stores/tabs.js';
-  import { workspaceStore } from '$lib/stores/_workspace.js';
+  import { workspaceStore } from '$lib/stores/workspace.js';
   import { usersApi } from '$lib/utils/api.js';
   import { toast } from '$lib/stores/toast.js';
+  import { DEBUG, dlog, setupTestUser } from '$lib/utils/debug.js'; // <-- ИМПОРТ
 
   export let tab;
 
@@ -12,8 +13,18 @@
 
   const limit = $workspaceStore.settings.defaultLimit;
 
+  $effect(() => {
+    if (DEBUG) {
+      const testUser = setupTestUser();
+      if (testUser && searchValue === '') {
+        searchValue = '-1';
+        dlog('Auto-filled test user ID');
+      }
+    }
+  });
+
 async function handleSearch() {
-  console.log('✅ handleSearch CALLED!');
+  dlog('✅ handleSearch CALLED!');
 
   if (!searchValue.trim()) {
     toast.error('Please enter search value');
@@ -25,7 +36,7 @@ async function handleSearch() {
 
   try {
     let results;
-    console.log('✅ Making API call for:', searchType, searchValue);
+    dlog('✅ Making API call for:', searchType, searchValue);
 
     switch (searchType) {
       case 'id':
@@ -39,18 +50,18 @@ async function handleSearch() {
         break;
     }
 
-    console.log('✅ API RAW RESULTS:', results);
+    dlog('✅ API RAW RESULTS:', results);
 
     const resultArray = Array.isArray(results) ? results : [results].filter(Boolean);
 
-    console.log('✅ FINAL RESULT ARRAY:', resultArray);
+    dlog('✅ FINAL RESULT ARRAY:', resultArray);
 
     tabsStore.updateTab(tab.id, {
       results: resultArray,
       searchParams: { type: searchType, value: searchValue }
     });
 
-    console.log('✅ Tab updated with results');
+    dlog('✅ Tab updated with results');
 
   } catch (error) {
     console.error('❌ Search error:', error);
@@ -62,30 +73,29 @@ async function handleSearch() {
 }
 
   function handleKeyPress(event) {
-    console.log('⌨️ Key pressed:', event.key);
+    dlog('⌨️ Key pressed:', event.key);
     if (event.key === 'Enter') {
-      console.log('🔴 Enter pressed, calling handleSearch');
+      dlog('🔴 Enter pressed, calling handleSearch');
       handleSearch();
     }
   }
 
-  // Добавим отдельную функцию для кнопки
   function handleButtonClick() {
-    console.log('🔴 Search button clicked');
+    dlog('🔴 Search button clicked');
     handleSearch();
   }
 
-  $: inputPlaceholder = searchType === 'id' 
-    ? 'Enter user ID' 
-    : searchType === 'email' 
-      ? 'Enter email address' 
+  $: inputPlaceholder = searchType === 'id'
+    ? 'Enter user ID'
+    : searchType === 'email'
+      ? 'Enter email address'
       : 'Enter CRM ID';
 </script>
 
 <div class="search-form">
   <div class="search-controls">
-    <sl-select 
-      value={searchType} 
+    <sl-select
+      value={searchType}
       on:sl-change={(e) => searchType = e.target.value}
       style="min-width: 120px;"
     >

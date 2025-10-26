@@ -3,7 +3,7 @@
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
   import { workspaces } from '$lib/stores/app';
-  import { workspaceStore } from '$lib/stores/_workspace.js';
+  import { workspaceStore } from '$lib/stores/workspace.js';
   import { tabsStore } from '$lib/stores/tabs.js';
   import { toast } from '$lib/stores/toast';
   

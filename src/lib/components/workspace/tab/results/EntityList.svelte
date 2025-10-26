@@ -2,21 +2,31 @@
   import { workspaceStore } from '$lib/stores/workspace.js';
   import EntityContainer from './entity/EntityContainer.svelte';
   
-  export let entities = [];
-  export let entityType;
-  export let loading = false;
-  export let onLoadMore = null;
+  let { 
+    entities = [], 
+    entityType, 
+    loading = false, 
+    onLoadMore = null 
+  } = $props();
 
-  let expandedEntities = new Set();
+  let expandedEntities = $state(new Set());
 
   function toggleExpand(entityId) {
+    expandedEntities = new Set(expandedEntities);
     if (expandedEntities.has(entityId)) {
       expandedEntities.delete(entityId);
     } else {
       expandedEntities.add(entityId);
     }
-    expandedEntities = new Set(expandedEntities);
   }
+  // function toggleExpand(entityId) {
+  //   if (expandedEntities.has(entityId)) {
+  //     expandedEntities.delete(entityId);
+  //   } else {
+  //     expandedEntities.add(entityId);
+  //   }
+  //   expandedEntities = new Set(expandedEntities);
+  // }
 </script>
 
 <div class="entity-list">

@@ -33,6 +33,7 @@
 
       if (result.success) {
         isAuthenticated.set(true);
+        await tick();
         goto('/');
       }
     } catch (err) {

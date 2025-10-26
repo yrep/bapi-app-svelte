@@ -22,10 +22,10 @@ function createWorkspaceStore() {
     currentWorkspace: null,
     workspaceType: 'binder',
     settings: WORKSPACE_TYPES.binder.settings,
-    selectedUser: null // ← ДОБАВЛЯЕМ ВЫБРАННОГО ПОЛЬЗОВАТЕЛЯ
+    selectedUser: null
   });
 
-  // Сохраняем состояние только если saveTabChain включен
+
   if (browser) {
     subscribe(state => {
       if (state.settings.saveTabChain) {
@@ -33,7 +33,7 @@ function createWorkspaceStore() {
           workspaceId: state.currentWorkspace?.id,
           workspaceType: state.workspaceType,
           settings: state.settings,
-          selectedUser: state.selectedUser, // ← СОХРАНЯЕМ ПОЛЬЗОВАТЕЛЯ
+          selectedUser: state.selectedUser,
           tabChain: $tabsStore.map(tab => ({
             id: tab.id,
             entityType: tab.entityType,
@@ -50,7 +50,7 @@ function createWorkspaceStore() {
     subscribe,
     setWorkspace: (workspace, type = 'binder') => {
       const workspaceConfig = WORKSPACE_TYPES[type] || WORKSPACE_TYPES.binder;
-      
+
       update(state => ({
         ...state,
         currentWorkspace: workspace,
@@ -70,13 +70,13 @@ function createWorkspaceStore() {
         settings: { ...state.settings, ...newSettings }
       }));
     },
-    setSelectedUser: (userData) => { // ← МЕТОД ДЛЯ УСТАНОВКИ ПОЛЬЗОВАТЕЛЯ
+    setSelectedUser: (userData) => {
       update(state => ({
         ...state,
         selectedUser: userData
       }));
     },
-    clearSelectedUser: () => { // ← МЕТОД ДЛЯ ОЧИСТКИ
+    clearSelectedUser: () => {
       update(state => ({
         ...state,
         selectedUser: null
@@ -84,7 +84,7 @@ function createWorkspaceStore() {
     },
     restoreState: (workspaceId) => {
       if (!browser) return false;
-      
+
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         try {

@@ -1,11 +1,27 @@
 <script>
+  import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
-  import { workspaceStore } from '$lib/stores/workspace.js'; // ← исправил импорт
+  import { workspaceStore } from '$lib/stores/workspace.js';
   import { tabsStore } from '$lib/stores/tabs.js';
+  import { setupTestUser, DEBUG } from '$lib/utils/debug.js';
 
   export let workspace;
 
   let showSettings = false;
+
+ onMount(() => {
+    console.log('DEBUG mode:', DEBUG);
+    console.log('Current selectedUser:', $workspaceStore.selectedUser);
+    
+    if (!$workspaceStore.selectedUser) {
+      const testUser = setupTestUser();
+      console.log('Test user from setup:', testUser);
+      if (testUser) {
+        workspaceStore.setSelectedUser(testUser);
+      }
+    }
+  });
+
 
   function toggleSettings() {
     showSettings = !showSettings;
@@ -26,12 +42,11 @@
       ></sl-icon-button>
       <div class="workspace-info">
         <h1>{workspace.name}</h1>
-        <!-- Блок выбранного пользователя -->
-        {#if $workspaceStore.selectedUser}
-          <div class="selected-user">
+        <div class="selected-user">
+          {#if $workspaceStore.selectedUser}
             <sl-tag variant="primary" size="small">
               <sl-icon name="person" slot="prefix"></sl-icon>
-              User: {$workspaceStore.selectedUser.name || $workspaceStore.selectedUser.id}
+              User: {$workspaceStore.selectedUser.id}
               <sl-icon-button 
                 name="x" 
                 label="Clear user"
@@ -39,8 +54,13 @@
                 on:click={clearSelectedUser}
               ></sl-icon-button>
             </sl-tag>
-          </div>
-        {/if}
+          {:else}
+            <sl-tag variant="neutral" size="small">
+              <sl-icon name="person" slot="prefix"></sl-icon>
+              user is not set
+            </sl-tag>
+          {/if}
+        </div>
       </div>
     </div>
 

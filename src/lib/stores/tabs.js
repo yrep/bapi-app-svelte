@@ -59,15 +59,37 @@ function createTabsStore() {
       })));
     },
     appendResults: (tabId, newResults, limit) => {
+      console.log('📥 Appending results to tab:', tabId, {
+        newResultsCount: newResults.length,
+        limit,
+        currentResults: tabs.find(tab => tab.id === tabId)?.results?.length
+      });
+      
       update(tabs => tabs.map(tab => {
         if (tab.id === tabId) {
+          console.log('🔍 Current tab before update:', {
+            id: tab.id,
+            entityType: tab.entityType,
+            currentResults: tab.results.length,
+            newResults: newResults.slice(0, 2) // Показываем только первые 2 для отладки
+          });
+          
           const updatedResults = [...tab.results, ...newResults];
-          return {
+          const updatedTab = {
             ...tab,
             results: updatedResults,
             offset: updatedResults.length,
             hasMore: newResults.length === limit
           };
+          
+          console.log('🔍 Updated tab:', {
+            id: updatedTab.id,
+            resultsCount: updatedTab.results.length,
+            hasMore: updatedTab.hasMore,
+            firstResult: updatedTab.results[0] ? { ...updatedTab.results[0] } : null
+          });
+          
+          return updatedTab;
         }
         return tab;
       }));
