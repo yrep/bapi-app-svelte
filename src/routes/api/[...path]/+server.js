@@ -53,20 +53,24 @@ async function handleProxyRequest(method, path, request, searchParams = null, bo
     apiLogger.logResponse('FRONT', method, fullUrl, 200, 'OK', result);
     return json(result);
   } catch (error) {
-    console.error('💥 PROXY ERROR:', error);
+     console.error('💥 PROXY ERROR:', error);
     console.error('💥 Error details:', {
       message: error.message,
       stack: error.stack,
-      name: error.name
+      name: error.name,
+      payload: error.payload,
+      status: error.status 
     });
 
     const errorResponse = { 
       message: error.message,
-      status: error.message.includes('401') ? 401 : 500
+      payload: error.payload || null,
+      status: error.status || 500
     };
 
-    //const errorResponse = { message: 'Internal Error' };
-    apiLogger.logResponse('FRONT', method, fullUrl, 500, 'Internal Server Error', errorResponse);
-    return json(errorResponse, { status: 500 });
+    const httpStatus = error.status || 500;
+    
+    apiLogger.logResponse('FRONT', method, fullUrl, httpStatus, 'Error', errorResponse);
+    return json(errorResponse, { status: httpStatus });
   }
 }

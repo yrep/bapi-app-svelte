@@ -6,27 +6,56 @@ function createTabsStore() {
 
   return {
     subscribe,
-    addTab: (entityType, searchParams = {}, id = nanoid()) => {
-      console.log('➕ Adding tab:', { id, entityType, searchParams });
-      update(tabs => {
-        const newTab = {
-          id,
-          entityType,
-          searchParams,
-          results: [],
-          loading: false,
-          error: null,
-          offset: 0,
-          hasMore: false
-        };
+    // addTab: (entityType, searchParams = {}, id = nanoid()) => {
+    //   console.log('➕ Adding tab:', { id, entityType, searchParams });
+    //   update(tabs => {
+    //     const newTab = {
+    //       id,
+    //       entityType,
+    //       searchParams,
+    //       results: [],
+    //       loading: false,
+    //       error: null,
+    //       offset: 0,
+    //       hasMore: false
+    //     };
         
-        const updatedTabs = tabs.map(tab => ({ ...tab, active: false }));
-        const newTabs = [...updatedTabs, { ...newTab, active: true }];
-        console.log('📋 Tabs after add:', newTabs);
-        return newTabs;
-      });
-      return id;
-    },
+    //     const updatedTabs = tabs.map(tab => ({ ...tab, active: false }));
+    //     const newTabs = [...updatedTabs, { ...newTab, active: true }];
+    //     console.log('📋 Tabs after add:', newTabs);
+    //     return newTabs;
+    //   });
+    //   return id;
+    // },
+addTab: (entityType, searchParams = {}, id = nanoid()) => {
+  console.log('➕ Adding tab:', { id, entityType, searchParams });
+  
+  return new Promise((resolve) => {
+    update(tabs => {
+      const newTab = {
+        id,
+        entityType,
+        searchParams,
+        results: [],
+        loading: Object.keys(searchParams).length > 0,
+        error: null,
+        offset: 0,
+        hasMore: false
+      };
+      
+      const updatedTabs = tabs.map(tab => ({ ...tab, active: false }));
+      const newTabs = [...updatedTabs, { ...newTab, active: true }];
+      
+      if (Object.keys(searchParams).length > 0) {
+        setTimeout(() => resolve(id), 0);
+      } else {
+        resolve(id);
+      }
+      
+      return newTabs;
+    });
+  });
+},
     updateTab: (tabId, updates) => {
       console.log('🔄 Updating tab:', tabId, updates);
       update(tabs => {

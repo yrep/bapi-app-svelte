@@ -22,6 +22,30 @@ export const authApi = {
   refresh: () => api.post('auth/refresh', {})
 };
 
+// async function handleApiResponse(response) {
+//   const responseClone = response.clone();
+//   const responseText = await response.text();
+
+//   console.log(`Response status: ${response.status}`);
+//   console.log(`Response body: ${responseText}`);
+
+//   if (!response.ok) {
+//     let errorMessage = `API error ${response.status}`;
+
+//     try {
+//       const errorData = JSON.parse(responseText);
+//       errorMessage = errorData.message || errorData.error || errorMessage;
+//     } catch {
+//       errorMessage = responseText || errorMessage;
+//     }
+
+//     throw new Error(errorMessage);
+//   }
+
+//   return JSON.parse(responseText);
+// }
+
+
 async function handleApiResponse(response) {
   const responseClone = response.clone();
   const responseText = await response.text();
@@ -31,22 +55,28 @@ async function handleApiResponse(response) {
 
   if (!response.ok) {
     let errorMessage = `API error ${response.status}`;
+    let errorPayload = null;
 
     try {
       const errorData = JSON.parse(responseText);
       errorMessage = errorData.message || errorData.error || errorMessage;
+      errorPayload = errorData;
     } catch {
       errorMessage = responseText || errorMessage;
+      errorPayload = responseText;
     }
 
-    throw new Error(errorMessage);
+    const error = new Error(errorMessage);
+    error.payload = errorPayload;
+    error.status = response.status;
+    throw error;
   }
 
   return JSON.parse(responseText);
 }
 
 export const api = {
-  request: async (method, path, data = null) => {
+request: async (method, path, data = null) => {
     const url = `${API_BASE}/${path}`;
 
     const selectedUser = getCurrentSelectedUser();
@@ -72,8 +102,18 @@ export const api = {
     dlog(url);
     dlog(options);
 
-    const response = await fetch(url, options);
-    return handleApiResponse(response);
+    try {
+      const response = await fetch(url, options);
+      return handleApiResponse(response);
+    } catch (error) {
+
+      if (error.payload) {
+        throw error;
+      }
+
+      error.payload = { message: error.message };
+      throw error;
+    }
   },
 
   get: (path, params = {}) => {
@@ -114,6 +154,10 @@ export const vendorsApi = {
 
 export const bindsApi = {
   search: (params) => api.post('supervisor/bindSearch', params),
+};
+
+export const tasksApi = {
+  search: (params) => api.post('supervisor/taskSearch', params),
 };
 
 export const entityApi = {

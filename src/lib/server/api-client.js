@@ -71,7 +71,11 @@ export class ApiClient {
       );
 
       if (!response.ok) {
-        throw new Error(`API error ${response.status}: ${response.statusText}`);
+        //throw new Error(`API error ${response.status}: ${response.statusText}`);
+        const error = new Error(`API error ${response.status}: ${response.statusText}`);
+        error.payload = responseBody;
+        error.status = response.status;
+        throw error;
       }
 
       const bapiResponse = createBapiResponse(responseBody);

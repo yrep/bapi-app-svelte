@@ -14,6 +14,7 @@
   let searchLogin = $state('');
   let searchSource = $state('');
   let loading = $state(false);
+  let hasAutoSearched = $state(false);
 
   const limit = $workspaceStore.settings.defaultLimit;
 
@@ -52,6 +53,37 @@
     });
   });
 
+
+ $effect(() => {
+    // Берем searchParams из вложенной структуры
+    const params = tab.searchParams?.searchParams || tab.searchParams;
+    
+    if (params && Object.keys(params).length > 0 && !hasAutoSearched) {
+      console.log('🔄 Filling form from searchParams:', params);
+      hasAutoSearched = true; // Помечаем что авто-поиск уже выполнен
+      
+      // Заполняем поля формы из searchParams
+      if (params.id) searchId = params.id;
+      if (params.type) searchType = params.type;
+      if (params.uuid) searchUuid = params.uuid;
+      if (params.token) searchToken = params.token;
+      if (params.login) searchLogin = params.login;
+      if (params.source) searchSource = params.source;
+      
+      console.log('📝 Form fields after filling:', {
+        searchId, searchType, searchUuid, searchToken, searchLogin, searchSource
+      });
+      
+      setTimeout(() => {
+        if (!searchDisabled && !loading) {
+          console.log('🔍 Auto-searching with filled form');
+          handleSearch();
+        } else {
+          console.log('❌ Cannot auto-search:', { searchDisabled, loading });
+        }
+      }, 100);
+    }
+  });
   // Methods
   async function handleSearch() {
     if (searchDisabled) {

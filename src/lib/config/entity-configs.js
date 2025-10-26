@@ -45,7 +45,7 @@ const entityConfigs = {
     brief: ['id', 'email', 'is_verified', 'enable']
   },
   vendor: {
-    displayName: 'Vendors',
+    displayName: 'Vendor',
     searchForm: 'VendorSearchForm',
     fields: {
       id: {
@@ -76,7 +76,7 @@ const entityConfigs = {
     brief: ['id', 'type', 'login']
   },
   bind: {
-    displayName: 'Binds',
+    displayName: 'Bind',
     searchForm: 'BindSearchForm',
     fields: {
       id: {
@@ -89,13 +89,13 @@ const entityConfigs = {
         editable: false
       },
       vendor_from_id: {
-        component: 'TextField',
+        component: 'EntityField',
         editable: false,
         fetchButton: true,
         fetchEntity: 'vendor'
       },
       vendor_to_id: {
-        component: 'TextField',
+        component: 'EntityField',
         editable: false,
         fetchButton: true,
         fetchEntity: 'vendor'
@@ -120,23 +120,42 @@ const entityConfigs = {
     brief: ['id', 'vendor_from_id', 'vendor_to_id']
   },
   task: {
-    displayName: 'Tasks',
-    searchForm: 'BaseSearchForm',
+    displayName: 'Task',
+    searchForm: 'TaskSearchForm',
     fields: {
       id: {
         component: 'TextField',
         editable: false,
         fetchButton: true
       },
-      title: {
+      dt_ins: {
         component: 'TextField',
-        editable: true
+        editable: false,
+        fetchButton: true
+      },
+      bind_id: {
+        component: 'TextField',
+        editable: false,
+        fetchButton: false
+      },
+      hook_id: {
+        component: 'TextField',
+        editable: false,
+        fetchButton: false
+      },
+      data: {
+        component: 'JsonField',
+        editable: false
+      },
+      state: {
+        component: 'NumberField',
+        editable: false
       }
     },
     brief: ['id', 'title']
   },
   request: {
-    displayName: 'Requests',
+    displayName: 'Request',
     searchForm: 'BaseSearchForm',
     fields: {
       id: {
