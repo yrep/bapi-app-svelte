@@ -9,10 +9,10 @@
 
   let showSettings = false;
 
- onMount(() => {
+onMount(() => {
     console.log('DEBUG mode:', DEBUG);
     console.log('Current selectedUser:', $workspaceStore.selectedUser);
-    
+
     if (!$workspaceStore.selectedUser) {
       const testUser = setupTestUser();
       console.log('Test user from setup:', testUser);
@@ -81,7 +81,7 @@
     <div class="settings-overlay" on:click={toggleSettings}>
       <div class="settings-modal" on:click|stopPropagation>
         <h2>Workspace Settings</h2>
-        
+
         <sl-switch
           checked={$workspaceStore.settings.saveTabChain}
           on:sl-change={(e) => workspaceStore.updateSettings({ saveTabChain: e.target.checked })}

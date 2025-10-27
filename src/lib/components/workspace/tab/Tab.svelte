@@ -9,18 +9,10 @@
   import TaskSearchForm from './search-form/TaskSearchForm.svelte';
   import RequestSearchForm from './search-form/RequestSearchForm.svelte';
   import EntityList from './results/EntityList.svelte';
+  import { dlog, DEBUG } from '$lib/utils/debug.js';
 
-  export let tab;
 
-  // Отладка получения tab
-  $: {
-    console.log('✅ Tab component - tab data:', {
-      id: tab?.id,
-      entityType: tab?.entityType,
-      resultsCount: tab?.results?.length,
-      results: tab?.results?.slice(0, 2) // Показываем только первые 2 результата для отладки
-    });
-  }
+  let { tab } = $props();
 
   const searchFormComponents = {
     BaseSearchForm,
@@ -35,23 +27,14 @@
   const SearchFormComponent = searchFormComponents[config.searchForm] || BaseSearchForm;
 
   async function handleLoadMore() {
-    console.log('Load more for tab:', tab.id);
-    // Добавь вызов соответствующего метода из tabsStore
-    // tabsStore.loadMore(tab.id);
+    dlog('Load more for tab:', tab.id);
   }
 </script>
 
 <div class="tab-content">
-  <div style="background: orange; padding: 10px; margin-bottom: 10px;">
-    ✅ Tab Active: {tab.entityType} - Results: {tab.results?.length || 0}
-  </div>
-  
-  <div style="background: lightblue; padding: 10px; margin-bottom: 10px;">
-    <strong>Config fields:</strong> {JSON.stringify(Object.keys(config.fields || {}), null, 2)}
-  </div>
-  
+
   <SearchFormComponent {tab} />
-  
+
   {#if tab.results}
     <EntityList
       entities={tab.results}

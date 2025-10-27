@@ -1,4 +1,5 @@
 <script>
+  // TODO refactor runes
   import { toast } from '$lib/stores/toast.js';
   import Toast from './Toast.svelte';
 </script>

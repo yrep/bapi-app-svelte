@@ -3,10 +3,10 @@
   import { workspaceStore } from '$lib/stores/workspace.js';
   import { vendorsApi } from '$lib/utils/api.js';
   import { toast } from '$lib/stores/toast.js';
+  import { DEBUG, dlog } from '$lib/utils/debug.js';
 
   let { tab } = $props();
 
-  // Reactive state
   let searchId = $state('');
   let searchType = $state('');
   let searchUuid = $state('');
@@ -18,7 +18,6 @@
 
   const limit = $workspaceStore.settings.defaultLimit;
 
-  // Derived values
   const hasId = $derived(searchId.trim().length > 0);
   const hasOtherFields = $derived(
     searchType.trim().length > 0 ||
@@ -38,9 +37,8 @@
         : 'Enter Vendor ID or other search criteria'
   );
 
-  // Effects
   $effect(() => {
-    console.log('🔍 Search form state:', {
+    dlog('🔍 Search form state:', {
       hasId,
       hasOtherFields,
       searchDisabled,
@@ -54,32 +52,30 @@
   });
 
 
- $effect(() => {
-    // Берем searchParams из вложенной структуры
+  $effect(() => {
     const params = tab.searchParams?.searchParams || tab.searchParams;
-    
+
     if (params && Object.keys(params).length > 0 && !hasAutoSearched) {
-      console.log('🔄 Filling form from searchParams:', params);
-      hasAutoSearched = true; // Помечаем что авто-поиск уже выполнен
-      
-      // Заполняем поля формы из searchParams
+      dlog('🔄 Filling form from searchParams:', params);
+      hasAutoSearched = true;
+
       if (params.id) searchId = params.id;
       if (params.type) searchType = params.type;
       if (params.uuid) searchUuid = params.uuid;
       if (params.token) searchToken = params.token;
       if (params.login) searchLogin = params.login;
       if (params.source) searchSource = params.source;
-      
-      console.log('📝 Form fields after filling:', {
+
+      dlog('📝 Form fields after filling:', {
         searchId, searchType, searchUuid, searchToken, searchLogin, searchSource
       });
-      
+
       setTimeout(() => {
         if (!searchDisabled && !loading) {
-          console.log('🔍 Auto-searching with filled form');
+          dlog('🔍 Auto-searching with filled form');
           handleSearch();
         } else {
-          console.log('❌ Cannot auto-search:', { searchDisabled, loading });
+          console.error('❌ Cannot auto-search:', { searchDisabled, loading });
         }
       }, 100);
     }
@@ -102,8 +98,7 @@
           offset: 0
         }
       };
-      
-      // Добавляем параметры поиска
+
       if (hasId) searchParams.id = searchId.trim();
       if (searchType.trim()) searchParams.type = searchType.trim();
       if (searchUuid.trim()) searchParams.uuid = searchUuid.trim();
@@ -111,15 +106,15 @@
       if (searchLogin.trim()) searchParams.login = searchLogin.trim();
       if (searchSource.trim()) searchParams.source = searchSource.trim();
 
-      console.log('🔍 Searching vendors with params:', searchParams);
+      dlog('🔍 Searching vendors with params:', searchParams);
 
       const response = await vendorsApi.search(searchParams);
 
-      console.log('✅ Search response:', response);
+      dlog('✅ Search response:', response);
 
       const results = response.vendors || [];
 
-      console.log('✅ Search results:', results);
+      dlog('✅ Search results:', results);
 
       tabsStore.updateTab(tab.id, {
         results,
@@ -127,7 +122,7 @@
         offset: results.length,
         hasMore: results.length === limit
       });
-      
+
       if (results.length === 0) {
         toast.warning('No vendors found');
       } else {
@@ -156,7 +151,7 @@
 
       const newResults = await vendorsApi.search(searchParams);
       tabsStore.appendResults(tab.id, newResults, limit);
-      
+
       if (newResults.length > 0) {
         toast.success(`Loaded ${newResults.length} more vendors`);
       }
@@ -180,8 +175,8 @@
     searchToken = '';
     searchLogin = '';
     searchSource = '';
-    
-    tabsStore.updateTab(tab.id, { 
+
+    tabsStore.updateTab(tab.id, {
       results: [],
       searchParams: {},
       offset: 0,
@@ -262,7 +257,7 @@
       <sl-icon slot="prefix" name="x-circle"></sl-icon>
       Clear
     </sl-button>
-    
+
     <sl-button
       variant="primary"
       loading={loading}

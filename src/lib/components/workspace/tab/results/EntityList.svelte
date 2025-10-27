@@ -2,11 +2,11 @@
   import { workspaceStore } from '$lib/stores/workspace.js';
   import EntityContainer from './entity/EntityContainer.svelte';
   
-  let { 
-    entities = [], 
-    entityType, 
-    loading = false, 
-    onLoadMore = null 
+  let {
+    entities = [],
+    entityType,
+    loading = false,
+    onLoadMore = null
   } = $props();
 
   let expandedEntities = $state(new Set());

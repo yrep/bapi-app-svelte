@@ -3,10 +3,10 @@
   import { workspaceStore } from '$lib/stores/workspace.js';
   import { bindsApi } from '$lib/utils/api.js';
   import { toast } from '$lib/stores/toast.js';
+  import { setupTestUser, DEBUG, dlog } from '$lib/utils/debug.js';
 
   let { tab } = $props();
 
-  // Reactive state
   let searchId = $state('');
   let searchUuid = $state('');
   let searchVendorFromId = $state('');
@@ -17,7 +17,6 @@
 
   const limit = $workspaceStore.settings.defaultLimit;
 
-  // Derived values
   const hasId = $derived(searchId.trim().length > 0);
   const hasOtherFields = $derived(
     searchUuid.trim().length > 0 ||
@@ -38,7 +37,7 @@
 
   // Effects
   $effect(() => {
-    console.log('🔍 Bind search form state:', {
+    dlog('🔍 Bind search form state:', {
       hasId,
       hasOtherFields,
       searchDisabled,
@@ -51,11 +50,10 @@
   });
 
   $effect(() => {
-    // Берем searchParams из вложенной структуры
     const params = tab.searchParams?.searchParams || tab.searchParams;
-    
+
     if (params && Object.keys(params).length > 0 && !hasAutoSearched) {
-      console.log('🔄 Filling bind form from searchParams:', params);
+      dlog('🔄 Filling bind form from searchParams:', params);
       hasAutoSearched = true;
 
       if (params.id) searchId = params.id;
@@ -65,14 +63,14 @@
       if (params.enable !== undefined && params.enable !== null) {
         searchEnable = params.enable.toString();
       }
-      
-      console.log('📝 Bind form fields after filling:', {
+
+      dlog('📝 Bind form fields after filling:', {
         searchId, searchUuid, searchVendorFromId, searchVendorToId, searchEnable
       });
-      
+
       setTimeout(() => {
         if (!searchDisabled && !loading) {
-          console.log('🔍 Auto-searching binds with filled form');
+          dlog('🔍 Auto-searching binds with filled form');
           handleSearch();
         } else {
           console.log('❌ Cannot auto-search binds:', { searchDisabled, loading });
@@ -80,6 +78,7 @@
       }, 100);
     }
   });
+
   // Methods
   async function handleSearch() {
     if (searchDisabled) {
@@ -98,14 +97,13 @@
           offset: 0
         }
       };
-      
-      // Добавляем параметры поиска
+
       if (hasId) searchParams.id = searchId.trim();
       if (searchUuid.trim()) searchParams.uuid = searchUuid.trim();
       if (searchVendorFromId.trim()) searchParams.vendor_from_id = searchVendorFromId.trim();
       if (searchVendorToId.trim()) searchParams.vendor_to_id = searchVendorToId.trim();
       if (searchEnable.trim()) {
-        // Преобразуем строковое значение в boolean для поля enable
+
         const enableValue = searchEnable.trim().toLowerCase();
         if (enableValue === 'true' || enableValue === '1' || enableValue === 'yes') {
           searchParams.enable = true;
@@ -114,11 +112,11 @@
         }
       }
 
-      console.log('🔍 Searching binds with params:', searchParams);
+      dlog('🔍 Searching binds with params:', searchParams);
 
       const response = await bindsApi.search(searchParams);
 
-      console.log('✅ Search response:', response);
+      dlog('✅ Search response:', response);
 
       const results = response.binds || [];
 
@@ -130,7 +128,7 @@
         offset: results.length,
         hasMore: results.length === limit
       });
-      
+
       if (results.length === 0) {
         toast.warning('No binds found');
       } else {
@@ -162,9 +160,9 @@
 
       const response = await bindsApi.search(searchParams);
       const newResults = response.binds || [];
-      
+
       tabsStore.appendResults(tab.id, newResults, limit);
-      
+
       if (newResults.length > 0) {
         toast.success(`Loaded ${newResults.length} more binds`);
       }
@@ -187,8 +185,8 @@
     searchVendorFromId = '';
     searchVendorToId = '';
     searchEnable = '';
-    
-    tabsStore.updateTab(tab.id, { 
+
+    tabsStore.updateTab(tab.id, {
       results: [],
       searchParams: {},
       offset: 0,
@@ -196,14 +194,14 @@
     });
   }
 
-  // Функции для выборки сущностей (если нужны)
+
   function fetchVendorFrom() {
-    // Реализация выборки vendor_from
+    // delete???
     console.log('Fetch vendor_from implementation needed');
   }
 
   function fetchVendorTo() {
-    // Реализация выборки vendor_to  
+    // delete???
     console.log('Fetch vendor_to implementation needed');
   }
 </script>

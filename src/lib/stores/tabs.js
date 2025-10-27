@@ -1,5 +1,6 @@
 import { writable, derived } from 'svelte/store';
 import { nanoid } from 'nanoid';
+import { dlog, DEBUG } from '$lib/utils/debug.js';
 
 function createTabsStore() {
   const { subscribe, set, update } = writable([]);
@@ -69,7 +70,7 @@ addTab: (entityType, searchParams = {}, id = nanoid()) => {
     removeTab: (tabId) => {
       update(tabs => {
         const filtered = tabs.filter(tab => tab.id !== tabId);
-        // Если удалили активную вкладку, активируем последнюю
+        // last activated if last deleted
         if (filtered.length > 0 && !filtered.some(tab => tab.active)) {
           filtered[filtered.length - 1].active = true;
         }
@@ -96,11 +97,11 @@ addTab: (entityType, searchParams = {}, id = nanoid()) => {
       
       update(tabs => tabs.map(tab => {
         if (tab.id === tabId) {
-          console.log('🔍 Current tab before update:', {
+          dlog('🔍 Current tab before update:', {
             id: tab.id,
             entityType: tab.entityType,
             currentResults: tab.results.length,
-            newResults: newResults.slice(0, 2) // Показываем только первые 2 для отладки
+            newResults: newResults.slice(0, 2) // first 2
           });
           
           const updatedResults = [...tab.results, ...newResults];
@@ -117,10 +118,25 @@ addTab: (entityType, searchParams = {}, id = nanoid()) => {
             hasMore: updatedTab.hasMore,
             firstResult: updatedTab.results[0] ? { ...updatedTab.results[0] } : null
           });
-          
+
           return updatedTab;
         }
         return tab;
+      }));
+    },
+    getTabsForWorkspace: (workspaceId) => {
+      let tabs;
+
+      tabsStore.subscribe(value => { tabs = value; })();
+      return tabs.map(tab => ({
+        id: tab.id,
+        entityType: tab.entityType,
+        searchParams: tab.searchParams,
+        results: tab.results,
+        loading: tab.loading,
+        error: tab.error,
+        offset: tab.offset,
+        hasMore: tab.hasMore
       }));
     },
     clearAll: () => set([])

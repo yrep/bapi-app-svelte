@@ -1,6 +1,7 @@
 <script>
   import { workspaceStore } from '$lib/stores/workspace.js';
-  
+  import { setupTestUser, DEBUG } from '$lib/utils/debug.js';
+
   export let entities = [];
   export let entityType;
   export let loading = false;
@@ -21,16 +22,15 @@
 
   function isSelectedUser(entity) {
     return entityType === 'user' && 
-           $workspaceStore.selectedUser && 
-           $workspaceStore.selectedUser.id === entity.id;
+          $workspaceStore.selectedUser && 
+          $workspaceStore.selectedUser.id === entity.id;
   }
 
-  // Функция для отображения поля с учетом типа
   function renderField(key, value) {
     if (key === 'is_verified' || key === 'enable') {
       return `
         <sl-icon name="${value === '1' ? 'check' : 'x'}" 
-                 style="color: ${value === '1' ? 'green' : 'red'};">
+            style="color: ${value === '1' ? 'green' : 'red'};">
         </sl-icon>
       `;
     }
@@ -39,9 +39,11 @@
 </script>
 
 <div class="entity-list">
-  <div style="background: green; color: white; padding: 10px; margin-bottom: 10px;">
-    ✅ WITH BOOL FIELDS: Showing {entities?.length || 0} entities of type {entityType}
-  </div>
+  {#if DEBUG}
+    <div style="background: green; color: white; padding: 10px; margin-bottom: 10px;">
+      ✅ WITH BOOL FIELDS: Showing {entities?.length || 0} entities of type {entityType}
+    </div>
+  {/if}
 
   {#if loading && entities.length === 0}
     <div class="loading">

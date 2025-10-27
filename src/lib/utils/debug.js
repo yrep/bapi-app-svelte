@@ -20,7 +20,7 @@ export function setupTestUser() {
 
     localStorage.setItem('debugUser', JSON.stringify(testUser));
 
-    dlog('Test user setup:', testUser);
+    dlog('Integrilla user setup:', testUser);
     return testUser;
   }
   return null;

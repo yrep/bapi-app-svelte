@@ -94,16 +94,15 @@ function createWorkspaceStore() {
         try {
           const state = JSON.parse(saved);
           if (state.workspaceId === workspaceId) {
-            // Восстанавливаем цепочку табов
+
             state.tabChain.forEach(tabData => {
               tabsStore.addTab(tabData.entityType, tabData.searchParams, tabData.id);
             });
-            
-            // Восстанавливаем выбранного пользователя
+
             if (state.selectedUser) {
               update(store => ({ ...store, selectedUser: state.selectedUser }));
             }
-            
+
             return true;
           }
         } catch (e) {

@@ -26,14 +26,14 @@
         limit,
         offset: 0
       });
-      
+
       tabsStore.updateTab(tab.id, { 
         results,
         searchParams: { id: searchId },
         offset: results.length,
         hasMore: results.length === limit
       });
-      
+
       if (results.length === 0) {
         toast.warning('No results found');
       } else {
@@ -58,9 +58,9 @@
         limit,
         offset: tab.offset
       });
-      
+
       tabsStore.appendResults(tab.id, newResults, limit);
-      
+
       if (newResults.length > 0) {
         toast.success(`Loaded ${newResults.length} more results`);
       }

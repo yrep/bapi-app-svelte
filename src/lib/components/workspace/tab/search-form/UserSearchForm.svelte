@@ -46,7 +46,7 @@
         results: [testUser],
         searchParams: { type: searchType, value: searchValue }
       });
-      toast.success('Test user set');
+      toast.success('Integrilla user set');
       return;
     }
 
@@ -106,7 +106,20 @@
     handleSearch();
   }
 </script>
-
+<div class="brands-button-container">
+  <sl-tooltip content="Sets user id -1 as Integrilla has no binder users">
+    <sl-button
+      variant="primary"
+      on:click={() => {
+        searchValue = '-1';
+        handleSearch();
+      }}
+      class="integrilla-btn"
+    >
+      Integrilla
+    </sl-button>
+ </sl-tooltip>
+</div>
 <div class="search-form">
   <div class="search-controls">
     <sl-select value={searchType} on:sl-change={(e) => searchType = e.target.value}>
@@ -136,6 +149,22 @@
 </div>
 
 <style>
+  .integrilla-btn::part(base) {
+    background-color: #8fcdbe;
+    border-color: #8fcdbe;
+    color: white;
+  }
+
+  .integrilla-btn::part(base):hover {
+    background-color: #7bb8a9;
+    border-color: #7bb8a9;
+  }
+
+  .integrilla-btn::part(base):active {
+    background-color: #67a394;
+    border-color: #67a394;
+  }
+
   .search-form {
     margin-bottom: 1rem;
   }

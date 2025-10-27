@@ -3,7 +3,7 @@
   import { workspaceStore } from '$lib/stores/workspace.js';
   import JsonField from './field/JsonField.svelte';
   import { toast } from '$lib/stores/toast.js';
-  
+
   import TextField from './field/TextField.svelte';
   import NumberField from './field/NumberField.svelte';
   import BoolFieldIcon from './field/BoolFieldIcon.svelte';
@@ -15,9 +15,9 @@
   const VIEW_MODES = { NORMAL: 'normal', JSON: 'json' };
   let viewMode = $state(VIEW_MODES.NORMAL);
   const config = getEntityConfig(entityType);
-  
+
   let displayFields = $derived(
-    expanded 
+    expanded
       ? Object.keys(config.fields || {})
       : (config.brief || ['id', 'name', 'email'])
   );
@@ -59,24 +59,24 @@
           <sl-badge variant="neutral">{Object.keys(entity).length} fields</sl-badge>
         {/if}
       </div>
-      
+
       <div class="header-actions">
         <sl-tooltip content={viewMode === VIEW_MODES.NORMAL ? 'View as JSON' : 'View as fields'}>
-          <sl-icon-button 
+          <sl-icon-button
             name={viewMode === VIEW_MODES.NORMAL ? 'code' : 'list'}
             on:click={toggleViewMode}
           ></sl-icon-button>
         </sl-tooltip>
 
         <sl-tooltip content={expanded ? 'Collapse' : 'Expand'}>
-          <sl-icon-button 
+          <sl-icon-button
             name={expanded ? 'chevron-up' : 'chevron-down'}
             on:click={onToggle}
           ></sl-icon-button>
         </sl-tooltip>
 
         {#if entityType === 'user'}
-          <sl-button 
+          <sl-button
             size="small"
             variant={isSelectedUser() ? 'primary' : 'default'}
             on:click={handleUserSelect}
@@ -85,8 +85,23 @@
           </sl-button>
         {/if}
 
+        {#if entityType === 'bind'}
+          <sl-button
+            size="small"
+            variant="default"
+            on:click={() => {
+              import('$lib/stores/tabs.js').then(({ tabsStore }) => {
+                tabsStore.addTab('task', { bind_id: entity.id });
+              });
+            }}
+          >
+            <sl-icon slot="prefix" name="link"></sl-icon>
+            Tasks
+          </sl-button>
+        {/if}
+
         {#if entityType === 'task'}
-          <sl-button 
+          <sl-button
             size="small"
             variant="default"
             on:click={() => {
@@ -100,6 +115,36 @@
           </sl-button>
         {/if}
 
+        {#if entityType === 'vendor'}
+          <sl-button
+            size="small"
+            variant="default"
+            on:click={() => {
+              import('$lib/stores/tabs.js').then(({ tabsStore }) => {
+                tabsStore.addTab('bind', { vendor_from_id: entity.id });
+              });
+            }}
+          >
+            <sl-icon slot="prefix" name="link"></sl-icon>
+            Binds Out
+          </sl-button>
+        {/if}
+
+        {#if entityType === 'vendor'}
+          <sl-button
+            size="small"
+            variant="default"
+            on:click={() => {
+              import('$lib/stores/tabs.js').then(({ tabsStore }) => {
+                tabsStore.addTab('bind', { vendor_to_id: entity.id });
+              });
+            }}
+          >
+            <sl-icon slot="prefix" name="link"></sl-icon>
+            Binds In
+          </sl-button>
+        {/if}
+
       </div>
     </div>
   {:else}
@@ -107,7 +152,7 @@
       <span class="nested-title">{config.displayName || entityType} - {entity.id}</span>
     </div>
   {/if}
-  
+
   <div class="entity-content">
     {#if viewMode === VIEW_MODES.NORMAL}
       <div class="entity-fields">
@@ -174,29 +219,140 @@
 </div>
 
 <style>
-  .field-value-container { flex: 1; min-width: 0; }
-  .field-value { position: relative; transition: background-color 0.2s ease; }
-  .field-value--copyable { 
-    cursor: pointer; padding: 2px 4px; border-radius: 3px; 
-    display: inline-flex; align-items: center; gap: 0.5rem; 
-  }
-  .field-value--copyable:hover { background-color: var(--sl-color-primary-100); }
-  .copy-icon { opacity: 0; transition: opacity 0.2s ease; font-size: 0.8rem; color: var(--sl-color-neutral-500); }
-  .field-value--copyable:hover .copy-icon { opacity: 1; }
-  .entity-container { border: 1px solid var(--sl-color-neutral-200); border-radius: var(--sl-border-radius-medium); padding: 1rem; background: white; transition: all 0.2s ease; }
-  .entity-container:hover { border-color: var(--sl-color-neutral-300); }
-  .entity-container.expanded { background: var(--sl-color-neutral-50); padding: 1.5rem; }
-  .entity-container.nested { background: var(--sl-color-neutral-50); border: 1px solid var(--sl-color-neutral-300); padding: 0.75rem; margin: 0.25rem 0; }
-  .nested-header { margin-bottom: 0.5rem; }
-  .nested-title { font-weight: 600; color: var(--sl-color-neutral-700); font-size: 0.875rem; }
-  .entity-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; gap: 1rem; }
-  .header-info { display: flex; align-items: center; gap: 0.75rem; flex: 1; }
-  .header-info h4 { margin: 0; color: var(--sl-color-neutral-800); font-size: 1rem; line-height: 1.4; }
-  .header-actions { display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; }
-  .entity-content { min-height: 20px; }
-  .entity-fields { display: flex; flex-direction: column; gap: 0.5rem; }
-  .field { display: flex; gap: 1rem; font-size: 0.875rem; line-height: 1.4; }
-  .field-name { font-weight: 600; color: var(--sl-color-neutral-600); min-width: 120px; flex-shrink: 0; }
-  .more-fields-hint { font-size: 0.75rem; color: var(--sl-color-neutral-500); font-style: italic; margin-top: 0.75rem; padding: 0.5rem; background: var(--sl-color-neutral-100); border-radius: var(--sl-border-radius-small); text-align: center; cursor: pointer; }
-  .json-view { margin-top: 0.5rem; }
+.entity-container {
+  border: 1px solid var(--sl-color-neutral-200);
+  border-radius: var(--sl-border-radius-medium);
+  padding: 1rem;
+  background: white;
+  transition: all 0.2s ease;
+}
+
+.entity-container:hover {
+  border-color: var(--sl-color-neutral-300);
+}
+
+.entity-container.expanded {
+  background: var(--sl-color-neutral-50);
+  padding: 1.5rem;
+}
+
+.entity-container.nested {
+  background: var(--sl-color-neutral-50);
+  border: 1px solid var(--sl-color-neutral-300);
+  padding: 0.75rem;
+  margin: 0.25rem 0;
+}
+
+.entity-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+.header-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.header-info h4 {
+  margin: 0;
+  color: var(--sl-color-neutral-800);
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.entity-content {
+  min-height: 20px;
+}
+
+.entity-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.field {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.field-name {
+  font-weight: 600;
+  color: var(--sl-color-neutral-600);
+  min-width: 120px;
+  flex-shrink: 0;
+}
+
+.field-value-container {
+  flex: 1;
+  min-width: 0;
+}
+
+.field-value {
+  position: relative;
+  transition: background-color 0.2s ease;
+}
+
+.field-value--copyable {
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 3px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.field-value--copyable:hover {
+  background-color: var(--sl-color-primary-100);
+}
+
+.copy-icon {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  font-size: 0.8rem;
+  color: var(--sl-color-neutral-500);
+}
+
+.field-value--copyable:hover .copy-icon {
+  opacity: 1;
+}
+
+.more-fields-hint {
+  font-size: 0.75rem;
+  color: var(--sl-color-neutral-500);
+  font-style: italic;
+  margin-top: 0.75rem;
+  padding: 0.5rem;
+  background: var(--sl-color-neutral-100);
+  border-radius: var(--sl-border-radius-small);
+  text-align: center;
+  cursor: pointer;
+}
+
+.json-view {
+  margin-top: 0.5rem;
+}
+
+.nested-header {
+  margin-bottom: 0.5rem;
+}
+
+.nested-title {
+  font-weight: 600;
+  color: var(--sl-color-neutral-700);
+  font-size: 0.875rem;
+}
 </style>

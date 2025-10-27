@@ -1,7 +1,7 @@
 <script>
   import { tabsStore } from '$lib/stores/tabs.js';
   import { workspaceStore } from '$lib/stores/workspace.js';
-  import { requestsApi } from '$lib/utils/api.js'; // ← изменил импорт API
+  import { requestsApi } from '$lib/utils/api.js';
   import { toast } from '$lib/stores/toast.js';
   import DateRangePicker from '$lib/components/DateRangePicker.svelte';
   import { DEBUG, dlog } from '$lib/utils/debug.js';
@@ -17,7 +17,6 @@
 
   const limit = $workspaceStore.settings.defaultLimit;
 
-  // Derived values
   const hasSearchCriteria = $derived(
     searchId.trim().length > 0 ||
     searchTaskId.trim().length > 0 ||
@@ -27,46 +26,43 @@
 
   function completeTime(dateStr, isFrom = true) {
     if (!dateStr) return dateStr;
-    
+
     if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
       return isFrom ? `${dateStr} 00:00:00` : `${dateStr} 23:59:59`;
     }
     else if (dateStr.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/)) {
       return isFrom ? `${dateStr}:00` : `${dateStr}:59`;
     }
-    
+
     return dateStr;
   }
 
-  // Функция для обновления стора
   function updateStore() {
     const searchParams = buildSearchParams();
-    console.log('🔄 Updating tab searchParams:', searchParams);
+    dlog('🔄 Updating tab searchParams:', searchParams);
     tabsStore.updateTab(tab.id, { searchParams });
   }
 
-  // Effects для синхронизации с табом
   $effect(() => {
     const params = tab.searchParams?.searchParams || tab.searchParams;
-    
+
     if (params && Object.keys(params).length > 0 && !hasAutoSearched) {
-      console.log('🔄 Filling request form from searchParams:', params); // ← изменил текст
+      dlog('🔄 Filling request form from searchParams:', params);
       hasAutoSearched = true;
-      
-      // Заполняем поля формы из searchParams
+
       if (params.id) searchId = params.id;
-      if (params.task_id) searchTaskId = params.task_id; // ← изменил поле
+      if (params.task_id) searchTaskId = params.task_id;
       if (params.dt_ins_from) searchDateFrom = params.dt_ins_from;
       if (params.dt_ins_to) searchDateTo = params.dt_ins_to;
     }
   });
 
-  // Дебаг стейта
+
   $effect(() => {
     if (DEBUG) {
-      console.log('🔍 REQUEST SEARCH STATE:', { // ← изменил текст
+      dlog('🔍 REQUEST SEARCH STATE:', {
         searchId,
-        searchTaskId, // ← изменил поле
+        searchTaskId,
         searchDateFrom,
         searchDateTo,
         hasSearchCriteria
@@ -83,10 +79,9 @@
         offset: 0
       }
     };
-    
-    // Добавляем параметры поиска с дополнением времени
+
     if (searchId.trim()) searchParams.id = searchId.trim();
-    if (searchTaskId.trim()) searchParams.task_id = searchTaskId.trim(); // ← изменил поле
+    if (searchTaskId.trim()) searchParams.task_id = searchTaskId.trim();
     if (searchDateFrom) searchParams.dt_ins_from = completeTime(searchDateFrom, true);
     if (searchDateTo) searchParams.dt_ins_to = completeTime(searchDateTo, false);
 
@@ -105,12 +100,12 @@
     try {
       const searchParams = buildSearchParams();
 
-      console.log('🔍 Searching requests with params:', searchParams); // ← изменил текст
+      dlog('🔍 Searching requests with params:', searchParams);
 
-      const response = await requestsApi.search(searchParams); // ← изменил API
-      const results = response.requests || []; // ← изменил поле
+      const response = await requestsApi.search(searchParams);
+      const results = response.requests || [];
 
-      console.log('✅ Request search results:', results); // ← изменил текст
+      dlog('✅ Request search results:', results);
 
       tabsStore.updateTab(tab.id, {
         results,
@@ -118,16 +113,16 @@
         offset: results.length,
         hasMore: results.length === limit
       });
-      
+
       if (results.length === 0) {
-        toast.warning('No requests found'); // ← изменил текст
+        toast.warning('No requests found');
       } else {
-        toast.success(`Found ${results.length} request(s)`); // ← изменил текст
+        toast.success(`Found ${results.length} request(s)`);
       }
     } catch (error) {
-      console.error('❌ Request search error:', error); // ← изменил текст
+      console.error('❌ Request search error:', error);
       tabsStore.updateTab(tab.id, { error });
-      toast.error(error.message || 'Request search failed'); // ← изменил текст
+      toast.error(error.message || 'Request search failed');
     } finally {
       loading = false;
       tabsStore.updateTab(tab.id, { loading: false });
@@ -150,9 +145,9 @@
 
       const response = await requestsApi.search(searchParams);
       const newResults = response.requests || [];
-      
+
       tabsStore.appendResults(tab.id, newResults, limit);
-      
+
       if (newResults.length > 0) {
         toast.success(`Loaded ${newResults.length} more requests`);
       }
@@ -180,7 +175,7 @@
   function setQuickRange(hours) {
     const to = new Date();
     const from = new Date(to.getTime() - (hours * 60 * 60 * 1000));
-    
+
     searchDateFrom = toMySQLFormat(from);
     searchDateTo = toMySQLFormat(to);
     updateStore();
@@ -190,7 +185,7 @@
     const today = new Date();
     const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
-    
+
     searchDateFrom = toMySQLFormat(startOfDay);
     searchDateTo = toMySQLFormat(endOfDay);
     updateStore();
@@ -201,7 +196,7 @@
     yesterday.setDate(yesterday.getDate() - 1);
     const startOfDay = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
     const endOfDay = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 23, 59, 59);
-    
+
     searchDateFrom = toMySQLFormat(startOfDay);
     searchDateTo = toMySQLFormat(endOfDay);
     updateStore();
@@ -303,7 +298,7 @@
       <sl-icon slot="prefix" name="x-circle"></sl-icon>
       Clear
     </sl-button>
-    
+
     <sl-button
       variant="primary"
       loading={loading}
@@ -311,21 +306,20 @@
       on:click={handleSearch}
     >
       <sl-icon slot="prefix" name="search"></sl-icon>
-      Search Requests <!-- ← изменил текст -->
+      Search Requests
     </sl-button>
   </div>
 
   {#if tab.hasMore}
     <div class="load-more">
       <sl-button variant="default" on:click={handleLoadMore} loading={loading}>
-        Load more requests... <!-- ← изменил текст -->
+        Load more requests...
       </sl-button>
     </div>
   {/if}
 </div>
 
 <style>
-  /* Стили остаются такими же */
   .search-form {
     margin-bottom: 1rem;
   }

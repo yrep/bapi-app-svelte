@@ -1,7 +1,6 @@
 <script>
-  export let data;
-  export let expanded = false;
-  
+  let { data, expanded = false } = $props();
+
   function toggleExpanded() {
     expanded = !expanded;
   }
@@ -13,7 +12,7 @@
     <span>JSON Data</span>
     <sl-badge variant="neutral">{typeof data}</sl-badge>
   </div>
-  
+
   {#if expanded}
     <pre class="json-content">{JSON.stringify(data, null, 2)}</pre>
   {/if}
@@ -25,7 +24,7 @@
     border-radius: var(--sl-border-radius-medium);
     overflow: hidden;
   }
-  
+
   .json-header {
     display: flex;
     align-items: center;
@@ -36,11 +35,11 @@
     cursor: pointer;
     user-select: none;
   }
-  
+
   .json-header:hover {
     background: var(--sl-color-neutral-200);
   }
-  
+
   .json-content {
     margin: 0;
     padding: 1rem;

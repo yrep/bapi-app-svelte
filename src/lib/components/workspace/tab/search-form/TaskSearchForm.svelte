@@ -8,7 +8,6 @@
 
   let { tab } = $props();
 
-  // Reactive state - теперь строки для MySQL формата
   let searchId = $state('');
   let searchBindId = $state('');
   let searchHookId = $state('');
@@ -20,7 +19,6 @@
 
   const limit = $workspaceStore.settings.defaultLimit;
 
-  // Derived values
   const hasSearchCriteria = $derived(
     searchId.trim().length > 0 ||
     searchBindId.trim().length > 0 ||
@@ -30,51 +28,71 @@
     searchDateTo.length > 0
   );
 
-  // Функция для дополнения времени
   function completeTime(dateStr, isFrom = true) {
     if (!dateStr) return dateStr;
-    
-    // Если только дата (YYYY-MM-DD)
+
     if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
       return isFrom ? `${dateStr} 00:00:00` : `${dateStr} 23:59:59`;
     }
-    // Если дата и время без секунд (YYYY-MM-DD HH:mm)
+
     else if (dateStr.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/)) {
       return isFrom ? `${dateStr}:00` : `${dateStr}:59`;
     }
-    
+
     return dateStr;
   }
 
-  // Функция для обновления стора
   function updateStore() {
     const searchParams = buildSearchParams();
-    console.log('🔄 Updating tab searchParams:', searchParams);
+    dlog('🔄 Updating tab searchParams:', searchParams);
     tabsStore.updateTab(tab.id, { searchParams });
   }
 
-  // Effects для синхронизации с табом
+
+  // $effect(() => {
+  //   const params = tab.searchParams?.searchParams || tab.searchParams;
+
+  //   if (params && Object.keys(params).length > 0 && !hasAutoSearched) {
+  //     console.log('🔄 Filling task form from searchParams:', params);
+  //     hasAutoSearched = true;
+
+  //     if (params.id) searchId = params.id;
+  //     if (params.bind_id) searchBindId = params.bind_id;
+  //     if (params.hook_id) searchHookId = params.hook_id;
+  //     if (params.state) searchState = params.state;
+  //     if (params.dt_ins_from) searchDateFrom = params.dt_ins_from;
+  //     if (params.dt_ins_to) searchDateTo = params.dt_ins_to;
+  //   }
+  // });
+
   $effect(() => {
     const params = tab.searchParams?.searchParams || tab.searchParams;
-    
+
     if (params && Object.keys(params).length > 0 && !hasAutoSearched) {
-      console.log('🔄 Filling task form from searchParams:', params);
-      hasAutoSearched = true;
-      
-      // Заполняем поля формы из searchParams
+      dlog('🔄 Filling task form from searchParams:', params);
+
       if (params.id) searchId = params.id;
       if (params.bind_id) searchBindId = params.bind_id;
       if (params.hook_id) searchHookId = params.hook_id;
       if (params.state) searchState = params.state;
       if (params.dt_ins_from) searchDateFrom = params.dt_ins_from;
       if (params.dt_ins_to) searchDateTo = params.dt_ins_to;
+
+      $effect(() => {
+        if (!hasAutoSearched && hasSearchCriteria) {
+          dlog('🚀 Auto-searching with criteria...');
+          hasAutoSearched = true;
+          handleSearch();
+        }
+      });
     }
   });
 
-  // Дебаг стейта
+
+
   $effect(() => {
     if (DEBUG) {
-      console.log('🔍 TASK SEARCH STATE:', {
+      dlog('🔍 TASK SEARCH STATE:', {
         searchId,
         searchBindId,
         searchHookId,
@@ -86,7 +104,6 @@
     }
   });
 
-  // Methods
   function buildSearchParams() {
     const searchParams = {
       meta: {
@@ -95,8 +112,7 @@
         offset: 0
       }
     };
-    
-    // Добавляем параметры поиска с дополнением времени
+
     if (searchId.trim()) searchParams.id = searchId.trim();
     if (searchBindId.trim()) searchParams.bind_id = searchBindId.trim();
     if (searchHookId.trim()) searchParams.hook_id = searchHookId.trim();
@@ -119,12 +135,12 @@
     try {
       const searchParams = buildSearchParams();
 
-      console.log('🔍 Searching tasks with params:', searchParams);
+      dlog('🔍 Searching tasks with params:', searchParams);
 
       const response = await tasksApi.search(searchParams);
       const results = response.tasks || [];
 
-      console.log('✅ Task search results:', results);
+      dlog('✅ Task search results:', results);
 
       tabsStore.updateTab(tab.id, {
         results,
@@ -132,7 +148,7 @@
         offset: results.length,
         hasMore: results.length === limit
       });
-      
+
       if (results.length === 0) {
         toast.warning('No tasks found');
       } else {
@@ -164,9 +180,9 @@
 
       const response = await tasksApi.search(searchParams);
       const newResults = response.tasks || [];
-      
+
       tabsStore.appendResults(tab.id, newResults, limit);
-      
+
       if (newResults.length > 0) {
         toast.success(`Loaded ${newResults.length} more tasks`);
       }
@@ -193,11 +209,10 @@
     updateStore();
   }
 
-  // Quick time range functions
   function setQuickRange(hours) {
     const to = new Date();
     const from = new Date(to.getTime() - (hours * 60 * 60 * 1000));
-    
+
     searchDateFrom = toMySQLFormat(from);
     searchDateTo = toMySQLFormat(to);
     updateStore();
@@ -207,7 +222,7 @@
     const today = new Date();
     const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
-    
+
     searchDateFrom = toMySQLFormat(startOfDay);
     searchDateTo = toMySQLFormat(endOfDay);
     updateStore();
@@ -218,13 +233,12 @@
     yesterday.setDate(yesterday.getDate() - 1);
     const startOfDay = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
     const endOfDay = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 23, 59, 59);
-    
+
     searchDateFrom = toMySQLFormat(startOfDay);
     searchDateTo = toMySQLFormat(endOfDay);
     updateStore();
   }
 
-  // Функция для преобразования Date в MySQL формат
   function toMySQLFormat(date) {
     if (!date) return '';
     const d = new Date(date);
@@ -239,7 +253,6 @@
 </script>
 
 <div class="search-form">
-  <!-- Дебаг информация -->
   {#if DEBUG}
     <div class="debug-info">
       <h4>🔍 Debug State</h4>
@@ -309,7 +322,6 @@
       </sl-input>
 
       <div class="date-range-section">
-        <!-- Двухстороннее связывание через $bindable -->
         <DateRangePicker
           bind:startDate={searchDateFrom}
           bind:endDate={searchDateTo}
@@ -319,7 +331,6 @@
       </div>
     </div>
 
-    <!-- Quick time range buttons -->
     <div class="quick-buttons">
       <sl-button-group label="Quick time ranges">
         <sl-button size="small" variant="default" on:click={() => setQuickRange(1)}>

@@ -3,12 +3,11 @@
   import { tabsStore } from '$lib/stores/tabs.js';
 
   let showAddMenu = false;
-  
-  // ВРЕМЕННО: простой список entities
+
   const availableEntities = ['user', 'vendor', 'bind', 'task', 'request'];
 
   onMount(() => {
-    console.log('WorkspaceTabs MOUNTED - это сообщение ДОЛЖНО быть в консоли');
+    console.log('WorkspaceTabs MOUNTED');
     console.log('Current tabs:', $tabsStore);
   });
 
