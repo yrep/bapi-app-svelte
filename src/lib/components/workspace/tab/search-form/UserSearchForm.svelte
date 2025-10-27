@@ -3,15 +3,22 @@
   import { workspaceStore } from '$lib/stores/workspace.js';
   import { usersApi } from '$lib/utils/api.js';
   import { toast } from '$lib/stores/toast.js';
-  import { DEBUG, dlog, setupTestUser } from '$lib/utils/debug.js'; // <-- ИМПОРТ
+  import { DEBUG, dlog, setupTestUser } from '$lib/utils/debug.js';
 
-  export let tab;
+  let { tab } = $props();
 
-  let searchType = 'id';
-  let searchValue = '';
-  let loading = false;
-
+  let searchType = $state('id');
+  let searchValue = $state('');
+  let loading = $state(false);
   const limit = $workspaceStore.settings.defaultLimit;
+
+  let inputPlaceholder = $derived(
+    searchType === 'id'
+      ? 'Enter user ID'
+      : searchType === 'email'
+        ? 'Enter email address'
+        : 'Enter CRM ID'
+  );
 
   $effect(() => {
     if (DEBUG) {
@@ -23,82 +30,86 @@
     }
   });
 
-async function handleSearch() {
-  dlog('✅ handleSearch CALLED!');
+  async function handleSearch() {
+    dlog('✅ handleSearch CALLED!');
 
-  if (!searchValue.trim()) {
-    toast.error('Please enter search value');
-    return;
-  }
-
-  loading = true;
-  tabsStore.updateTab(tab.id, { loading: true, error: null });
-
-  try {
-    let results;
-    dlog('✅ Making API call for:', searchType, searchValue);
-
-    switch (searchType) {
-      case 'id':
-        results = await usersApi.getById(searchValue.trim());
-        break;
-      case 'email':
-        results = await usersApi.getByEmail(searchValue.trim());
-        break;
-      case 'crm':
-        results = await usersApi.getByCRM(searchValue.trim());
-        break;
+    if (!searchValue.trim()) {
+      toast.error('Please enter search value');
+      return;
     }
 
-    dlog('✅ API RAW RESULTS:', results);
+    if (searchValue.trim() === '-1') {
+      dlog('🔄 Setting test user -1');
+      const testUser = { id: -1, name: 'Test User', email: 'test@example.com' };
+      workspaceStore.setSelectedUser(testUser);
+      tabsStore.updateTab(tab.id, {
+        results: [testUser],
+        searchParams: { type: searchType, value: searchValue }
+      });
+      toast.success('Test user set');
+      return;
+    }
 
-    const resultArray = Array.isArray(results) ? results : [results].filter(Boolean);
+    loading = true;
+    tabsStore.updateTab(tab.id, { loading: true, error: null });
 
-    dlog('✅ FINAL RESULT ARRAY:', resultArray);
+    try {
+      let results;
+      dlog('✅ Making API call for:', searchType, searchValue);
 
-    tabsStore.updateTab(tab.id, {
-      results: resultArray,
-      searchParams: { type: searchType, value: searchValue }
-    });
+      switch (searchType) {
+        case 'id':
+          results = await usersApi.getById(searchValue.trim());
+          break;
+        case 'email':
+          results = await usersApi.getByEmail(searchValue.trim());
+          break;
+        case 'crm':
+          results = await usersApi.getByCRM(searchValue.trim());
+          break;
+      }
 
-    dlog('✅ Tab updated with results');
+      dlog('✅ API RAW RESULTS:', results);
 
-  } catch (error) {
-    console.error('❌ Search error:', error);
-    toast.error(error.message || 'Search failed');
-  } finally {
-    loading = false;
-    tabsStore.updateTab(tab.id, { loading: false });
+      const resultArray = Array.isArray(results) ? results : [results].filter(Boolean);
+
+      dlog('✅ FINAL RESULT ARRAY:', resultArray);
+
+      tabsStore.updateTab(tab.id, {
+        results: resultArray,
+        searchParams: { type: searchType, value: searchValue }
+      });
+
+      dlog('✅ Tab updated with results');
+
+    } catch (error) {
+      console.error('❌ Search error:', error);
+      toast.error(error.message || 'Search failed');
+    } finally {
+      loading = false;
+      tabsStore.updateTab(tab.id, { loading: false });
+    }
   }
-}
 
   function handleKeyPress(event) {
     dlog('⌨️ Key pressed:', event.key);
     if (event.key === 'Enter') {
+      event.preventDefault();
       dlog('🔴 Enter pressed, calling handleSearch');
       handleSearch();
     }
   }
 
-  function handleButtonClick() {
+  function handleButtonClick(event) {
+    event.preventDefault();
     dlog('🔴 Search button clicked');
     handleSearch();
   }
-
-  $: inputPlaceholder = searchType === 'id'
-    ? 'Enter user ID'
-    : searchType === 'email'
-      ? 'Enter email address'
-      : 'Enter CRM ID';
 </script>
 
 <div class="search-form">
   <div class="search-controls">
-    <sl-select
-      value={searchType}
-      on:sl-change={(e) => searchType = e.target.value}
-      style="min-width: 120px;"
-    >
+    <sl-select value={searchType} on:sl-change={(e) => searchType = e.target.value}>
       <sl-option value="id">By ID</sl-option>
       <sl-option value="email">By Email</sl-option>
       <sl-option value="crm">By CRM</sl-option>
@@ -109,19 +120,18 @@ async function handleSearch() {
       value={searchValue}
       on:sl-input={(e) => searchValue = e.target.value}
       on:keypress={handleKeyPress}
-      style="flex: 1;"
     >
-      <sl-button
-        slot="suffix"
-        variant="primary"
-        loading={loading}
-        disabled={!searchValue.trim()}
-        on:click={handleButtonClick} <!-- ИЗМЕНИТЬ НА НОВУЮ ФУНКЦИЮ -->
-      >
-        <sl-icon slot="prefix" name="search"></sl-icon>
-        Search
-      </sl-button>
     </sl-input>
+
+    <sl-button
+      variant="primary"
+      loading={loading}
+      disabled={!searchValue.trim()}
+      on:click={handleButtonClick}
+    >
+      <sl-icon slot="prefix" name="search"></sl-icon>
+      Search
+    </sl-button>
   </div>
 </div>
 
@@ -133,7 +143,15 @@ async function handleSearch() {
   .search-controls {
     display: flex;
     gap: 0.5rem;
-    align-items: flex-start;
+    align-items: stretch;
+  }
+
+  .search-controls sl-select {
+    width: 120px;
+  }
+
+  .search-controls sl-input {
+    flex: 1;
   }
 
   @media (max-width: 768px) {

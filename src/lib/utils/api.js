@@ -134,7 +134,7 @@ export const brandsApi = {
 
 
 export const usersApi = {
-  getById: (id) => api.get(`users/${id}`),
+  getById: (id) => api.get(`supervisor/getUserById?id=${id}`),
   getByEmail: (email, brandSlug) => api.get('admin/getUserByBrandSlugEmail', {
     email: email,
     brand_slug: brandSlug

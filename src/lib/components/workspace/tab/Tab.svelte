@@ -3,7 +3,7 @@
   import { getEntityConfig } from '$lib/config/entity-configs.js';
   
   import BaseSearchForm from './search-form/BaseSearchForm.svelte';
-  import UserSearchForm from './search-form/_UserSearchForm.svelte';
+  import UserSearchForm from './search-form/UserSearchForm.svelte';
   import VendorSearchForm from './search-form/VendorSearchForm.svelte';
   import BindSearchForm from './search-form/BindSearchForm.svelte';
   import TaskSearchForm from './search-form/TaskSearchForm.svelte';
