@@ -2,6 +2,7 @@ import { json } from '@sveltejs/kit';
 import { DB } from '$lib/server/db.js';
 import { ApiClient } from '$lib/server/api-client.js';
 import { apiLogger } from '$lib/utils/logger.js';
+import { setupTestUser, DEBUG, dlog } from '$lib/utils/debug.js';
 
 export async function GET({ request, params, url, cookies }) {
   return handleProxyRequest('GET', params.path, request, url.searchParams, null, cookies);
@@ -17,38 +18,37 @@ async function handleProxyRequest(method, path, request, searchParams = null, bo
   const queryString = searchParams ? '?' + new URLSearchParams(searchParams).toString() : '';
   const fullUrl = `${method} ${fullPath}${queryString}`;
   
-  console.log('🔍 PROXY START:', { method, path, fullPath, queryString, body });
+  dlog('🔍 PROXY START:', { method, path, fullPath, queryString, body });
 
-  // Используем переданные cookies
   const sessionCode = cookies.get('session');
-  console.log('🔑 Session code from cookies:', sessionCode);
+  dlog('🔑 Session code from cookies:', sessionCode);
 
   if (!sessionCode) {
     const errorResponse = { error: 'Authentication required' };
-    console.log('❌ No session code found in cookies');
+    console.error('❌ No session code found in cookies');
     apiLogger.logResponse('FRONT', method, fullUrl, 401, 'Unauthorized', errorResponse);
     return json(errorResponse, { status: 401 });
   }
 
-  console.log('📋 Fetching session from DB...');
+  dlog('📋 Fetching session from DB...');
   const userSession = await DB.getSessionWithUser(sessionCode);
-  console.log('👤 User session:', userSession);
+  dlog('👤 User session:', userSession);
   
   if (!userSession) {
     const errorResponse = { error: 'Invalid session' };
-    console.log('❌ No user session found');
+    console.error('❌ No user session found');
     apiLogger.logResponse('FRONT', method, fullUrl, 401, 'Unauthorized', errorResponse);
     return json(errorResponse, { status: 401 });
   }
 
   try {
-    console.log('🚀 Creating ApiClient with settings:', userSession.settings);
+    dlog('🚀 Creating ApiClient with settings:', userSession.settings);
     const apiClient = new ApiClient(userSession.settings);
 
-    console.log('📤 Making request to backend...');
+    dlog('📤 Making request to backend...');
     const result = await apiClient.request(method, `${fullPath}${queryString}`, { body });
 
-    console.log('✅ Backend response:', result);
+    dlog('✅ Backend response:', result);
 
     apiLogger.logResponse('FRONT', method, fullUrl, 200, 'OK', result);
     return json(result);

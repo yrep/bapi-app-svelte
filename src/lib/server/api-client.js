@@ -3,15 +3,16 @@ import { apiLogger } from '$lib/utils/logger.js';
 import { X_API_KEY } from '$env/static/private';
 import { createBapiResponse } from '$lib/utils/bapi-response.js';
 import { AccessMiddleware } from './middleware.js';
+import { setupTestUser, DEBUG, dlog } from '$lib/utils/debug.js';
 
 const REFERER = process.env.REFERER || 'https://bapi.apitter.com';
 
 export class ApiClient {
   constructor(userSettings) {
 
-    console.log('ApiClient userSettings:', userSettings);
-    console.log('userSettings type:', typeof userSettings);
-    console.log('userSettings keys:', userSettings ? Object.keys(userSettings) : 'null');
+    dlog('ApiClient userSettings:', userSettings);
+    dlog('userSettings type:', typeof userSettings);
+    dlog('userSettings keys:', userSettings ? Object.keys(userSettings) : 'null');
 
     this.baseURL = API_BASE_URL;
     this.middleware = userSettings ? new AccessMiddleware(userSettings) : null;
@@ -20,7 +21,7 @@ export class ApiClient {
   async request(method, path, options = {}) {
     const url = `${this.baseURL}${path}`;
 
-    console.log('🚀 API CLIENT REQUEST:', {
+    dlog('🚀 API CLIENT REQUEST:', {
       method,
       fullUrl: url,
       baseURL: this.baseURL,
@@ -89,10 +90,10 @@ export class ApiClient {
       }
 
       let data = bapiResponse.getData();
-      console.log('Before get entity type');
+      dlog('Before get entity type');
       if (this.middleware) {
         const entityType = this.middleware.getEntityTypeFromPath(path);
-        console.log('Entity type', entityType);
+        dlog('Entity type', entityType);
         data = this.middleware.filterResponse(data, entityType, method);
 
         if (data === null || (Array.isArray(data) && data.length === 0)) {

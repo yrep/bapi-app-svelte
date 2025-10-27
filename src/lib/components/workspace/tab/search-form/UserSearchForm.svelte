@@ -40,10 +40,10 @@
 
     if (searchValue.trim() === '-1') {
       dlog('🔄 Setting test user -1');
-      const testUser = { id: -1, name: 'Test User', email: 'test@example.com' };
-      workspaceStore.setSelectedUser(testUser);
+      const integrillaUser = { id: -1, name: 'Integrilla User', email: '' };
+      workspaceStore.setSelectedUser(integrillaUser);
       tabsStore.updateTab(tab.id, {
-        results: [testUser],
+        results: [integrillaUser],
         searchParams: { type: searchType, value: searchValue }
       });
       toast.success('Integrilla user set');

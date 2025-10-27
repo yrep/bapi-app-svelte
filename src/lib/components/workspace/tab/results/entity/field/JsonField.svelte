@@ -13,7 +13,6 @@
   
   function copyToClipboard() {
     navigator.clipboard.writeText(jsonString);
-    // Можно добавить toast уведомление
   }
 </script>
 

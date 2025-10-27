@@ -73,7 +73,7 @@
           dlog('🔍 Auto-searching binds with filled form');
           handleSearch();
         } else {
-          console.log('❌ Cannot auto-search binds:', { searchDisabled, loading });
+          console.error('❌ Cannot auto-search binds:', { searchDisabled, loading });
         }
       }, 100);
     }
@@ -120,7 +120,7 @@
 
       const results = response.binds || [];
 
-      console.log('✅ Search results:', results);
+      dlog('✅ Search results:', results);
 
       tabsStore.updateTab(tab.id, {
         results,
@@ -197,12 +197,12 @@
 
   function fetchVendorFrom() {
     // delete???
-    console.log('Fetch vendor_from implementation needed');
+    dlog('Fetch vendor_from implementation needed');
   }
 
   function fetchVendorTo() {
     // delete???
-    console.log('Fetch vendor_to implementation needed');
+    dlog('Fetch vendor_to implementation needed');
   }
 </script>
 

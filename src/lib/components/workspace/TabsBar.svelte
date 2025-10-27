@@ -3,18 +3,17 @@
   import { derived } from 'svelte/store';
   import { tabsStore } from '$lib/stores/tabs.js';
   import { workspaceStore } from '$lib/stores/workspace.js';
+  import { setupTestUser, DEBUG, dlog } from '$lib/utils/debug.js';
 
   let tabsContainer;
   let scrollableArea;
   let addMenuElement;
-  let plusButtonElement; // ← ДОБАВЛЯЕМ ССЫЛКУ НА КНОПКУ
+  let plusButtonElement;
   
   let showAddMenu = $state(false);
   
-  // Временный список entities
-  const availableEntities = ['user', 'vendor', 'bind', 'task', 'request'];
+  const availableEntities = ['user', 'vendor', 'bind', 'task', 'request']; //del later
 
-  // Вычисляем состояние кнопок
   const entityStates = derived(tabsStore, $tabs => {
     const hasUserTab = $tabs.some(tab => tab.entityType === 'user');
     
@@ -25,21 +24,20 @@
   });
 
   onMount(() => {
-    console.log('TabsBar mounted - should be visible!');
-    console.log('Current tabs:', $tabsStore);
+    dlog('TabsBar mounted');
+    dlog('Current tabs:', $tabsStore);
 
     const handleClickOutside = (event) => {
-      // Проверяем, что клик был НЕ по меню и НЕ по кнопке плюс
       const clickedInsideMenu = addMenuElement && addMenuElement.contains(event.target);
       const clickedOnPlus = plusButtonElement && plusButtonElement.contains(event.target);
-      
+
       if (showAddMenu && !clickedInsideMenu && !clickedOnPlus) {
         showAddMenu = false;
       }
     };
 
     document.addEventListener('click', handleClickOutside);
-    document.addEventListener('touchstart', handleClickOutside); // Для мобильных устройств
+    document.addEventListener('touchstart', handleClickOutside);
 
     return () => {
       document.removeEventListener('click', handleClickOutside);
@@ -67,7 +65,7 @@
       }
     }
     
-    console.log('Adding tab:', entityType);
+    dlog('Adding tab:', entityType);
     tabsStore.addTab(entityType, {});
     showAddMenu = false;
     

@@ -1,29 +1,30 @@
 <script>
   import { onMount } from 'svelte';
   import { tabsStore } from '$lib/stores/tabs.js';
+  import { setupTestUser, DEBUG, dlog } from '$lib/utils/debug.js';
 
   let showAddMenu = false;
 
   const availableEntities = ['user', 'vendor', 'bind', 'task', 'request'];
 
   onMount(() => {
-    console.log('WorkspaceTabs MOUNTED');
-    console.log('Current tabs:', $tabsStore);
+    dlog('WorkspaceTabs MOUNTED');
+    dlog('Current tabs:', $tabsStore);
   });
 
   function handleTabClick(tabId) {
-    console.log('Click tab:', tabId);
+    dlog('Click tab:', tabId);
     tabsStore.setActiveTab(tabId);
   }
 
   function handleTabClose(tabId, event) {
     event.stopPropagation();
-    console.log('Close tab:', tabId);
+    dlog('Close tab:', tabId);
     tabsStore.removeTab(tabId);
   }
 
   function handleAddTab(entityType) {
-    console.log('Add tab:', entityType);
+    dlog('Add tab:', entityType);
     tabsStore.addTab(entityType, {});
     showAddMenu = false;
   }

@@ -6,20 +6,13 @@
   import { workspaceStore } from '$lib/stores/workspace.js';
   import { tabsStore } from '$lib/stores/tabs.js';
   import { toast } from '$lib/stores/toast';
+  import { setupTestUser, DEBUG, dlog } from '$lib/utils/debug.js';
   
   import WorkspaceHeader from '$lib/components/workspace/WorkspaceHeader.svelte';
   import TabsBar from '$lib/components/workspace/TabsBar.svelte';
   import Tab from '$lib/components/workspace/tab/Tab.svelte';
 
   let workspace = null;
-
-  $: {
-    console.log('🔴 Workspace page - tabsStore updated:', {
-      tabsCount: $tabsStore.length,
-      activeTabs: $tabsStore.filter(t => t.active),
-      allTabs: $tabsStore
-    });
-  }
 
   onMount(() => {
     workspace = $workspaces.find(w => w.id === $page.params.id);

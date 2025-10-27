@@ -3,14 +3,6 @@
   
   let { value, fieldConfig, entityType, fieldName, entity } = $props();
 
-  console.log('EntityField debug:', {
-    value,
-    fieldConfig,
-    fetchButton: fieldConfig?.fetchButton,
-    fetchEntity: fieldConfig?.fetchEntity,
-    shouldShowButton: fieldConfig?.fetchButton && fieldConfig?.fetchEntity && value
-  });
-
   // function handleFetch() {
   //   if (fieldConfig?.fetchEntity && value) {
   //     tabsStore.addTab(fieldConfig.fetchEntity, { id: value });

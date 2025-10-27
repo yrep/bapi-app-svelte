@@ -11,11 +11,7 @@
 
   let { entity, entityType, nested = true } = $props();
 
-  console.log('NestedEntityField - entityType:', entityType, 'entity:', entity);
-
   const config = getEntityConfig(entityType);
-
-  console.log('NestedEntityField - config:', config);
 
   function copyFieldValue(value, fieldName) {
     navigator.clipboard.writeText(String(value)).then(() => {

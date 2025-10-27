@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { user, workspaces, isLoading, checkAuth } from '$lib/stores/app';
+  import { workspaceStore } from '$lib/stores/workspace.js';
   import { browser } from '$app/environment';
 
   let showDeleteConfirm = false;
@@ -54,30 +55,27 @@
   //   showDeleteConfirm = false;
   // }
 
-  function deleteWorkspace() {
-    if (workspaceToDelete) {
-      if (browser) {
-        const storageKey = `workspace-state_${workspaceToDelete.id}`;
-        localStorage.removeItem(storageKey);
-      }
-      
-      workspaces.update(ws => ws.filter(w => w.id !== workspaceToDelete.id));
-      showDeleteConfirm = false;
-      workspaceToDelete = null;
-    }
-  }
+function deleteWorkspace() {
+  if (workspaceToDelete) {
 
-  function deleteAllWorkspaces() {
-    if (browser) {
-      $workspaces.forEach(workspace => {
-        const storageKey = `workspace-state_${workspace.id}`;
-        localStorage.removeItem(storageKey);
-      });
-    }
+    workspaceStore.clearWorkspaceState(workspaceToDelete.id);
     
-    workspaces.set([]);
+    workspaces.update(ws => ws.filter(w => w.id !== workspaceToDelete.id));
     showDeleteConfirm = false;
+    workspaceToDelete = null;
   }
+}
+
+function deleteAllWorkspaces() {
+  if (browser) {
+    $workspaces.forEach(workspace => {
+      workspaceStore.clearWorkspaceState(workspace.id);
+    });
+  }
+  
+  workspaces.set([]);
+  showDeleteConfirm = false;
+}
 
   async function logout() {
     isLoading.set(true);

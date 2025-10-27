@@ -26,8 +26,8 @@ export const authApi = {
 //   const responseClone = response.clone();
 //   const responseText = await response.text();
 
-//   console.log(`Response status: ${response.status}`);
-//   console.log(`Response body: ${responseText}`);
+//   dlog(`Response status: ${response.status}`);
+//   dlog(`Response body: ${responseText}`);
 
 //   if (!response.ok) {
 //     let errorMessage = `API error ${response.status}`;
@@ -50,8 +50,8 @@ async function handleApiResponse(response) {
   const responseClone = response.clone();
   const responseText = await response.text();
 
-  console.log(`Response status: ${response.status}`);
-  console.log(`Response body: ${responseText}`);
+  dlog(`Response status: ${response.status}`);
+  dlog(`Response body: ${responseText}`);
 
   if (!response.ok) {
     let errorMessage = `API error ${response.status}`;

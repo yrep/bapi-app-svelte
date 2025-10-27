@@ -1,20 +1,14 @@
 <script>
   import { workspaceStore } from '$lib/stores/workspace.js';
-  import { setupTestUser, DEBUG } from '$lib/utils/debug.js';
+  import { setupTestUser, DEBUG, dlog } from '$lib/utils/debug.js';
 
   export let entities = [];
   export let entityType;
   export let loading = false;
   export let onLoadMore = null;
 
-  $: console.log('✅ EntityList with BoolFieldIcon:', { 
-    entityType, 
-    entitiesCount: entities?.length,
-    entities: entities 
-  });
-
   function handleUserSelect(entity) {
-    console.log('👤 User selected:', entity);
+    dlog('👤 User selected:', entity);
     if (entityType === 'user') {
       workspaceStore.setSelectedUser(entity);
     }

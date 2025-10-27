@@ -3,19 +3,19 @@
   import { goto } from '$app/navigation';
   import { workspaceStore } from '$lib/stores/workspace.js';
   import { tabsStore } from '$lib/stores/tabs.js';
-  import { setupTestUser, DEBUG } from '$lib/utils/debug.js';
+  import { setupTestUser, DEBUG, dlog } from '$lib/utils/debug.js';
 
   export let workspace;
 
   let showSettings = false;
 
 onMount(() => {
-    console.log('DEBUG mode:', DEBUG);
-    console.log('Current selectedUser:', $workspaceStore.selectedUser);
+    dlog('DEBUG mode:', DEBUG);
+    dlog('Current selectedUser:', $workspaceStore.selectedUser);
 
     if (!$workspaceStore.selectedUser) {
       const testUser = setupTestUser();
-      console.log('Test user from setup:', testUser);
+      dlog('Test user from setup:', testUser);
       if (testUser) {
         workspaceStore.setSelectedUser(testUser);
       }

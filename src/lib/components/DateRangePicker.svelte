@@ -10,7 +10,6 @@
   let fromDatepicker;
   let toDatepicker;
 
-  // Функция для преобразования Date в MySQL формат
   function toMySQLFormat(date) {
     if (!date) return '';
     const d = new Date(date);
@@ -23,15 +22,14 @@
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
   }
 
-  // Функция для парсинга даты из строки (пробуем разные форматы)
   function parseDate(dateStr) {
     if (!dateStr) return null;
     
-    // Пробуем MySQL формат: YYYY-MM-DD HH:mm:ss
+    // YYYY-MM-DD HH:mm:ss
     let date = new Date(dateStr);
     if (!isNaN(date.getTime())) return date;
     
-    // Пробуем формат с точками: DD.MM.YYYY
+    // DD.MM.YYYY
     const dotMatch = dateStr.match(/^(\d{2})\.(\d{2})\.(\d{4})/);
     if (dotMatch) {
       const [, day, month, year] = dotMatch;
@@ -69,7 +67,7 @@
       }
     });
 
-    // Заполняем пикеры текущими значениями
+    // Picker
     if (startDate) {
       const date = parseDate(startDate);
       if (date) fromDatepicker.selectDate(date);

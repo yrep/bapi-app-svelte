@@ -1,145 +1,115 @@
-import { writable, derived } from 'svelte/store';
+import { writable } from 'svelte/store';
 import { nanoid } from 'nanoid';
-import { dlog, DEBUG } from '$lib/utils/debug.js';
+import { workspaceStore } from './workspace.js';
+import { setupTestUser, DEBUG, dlog } from '$lib/utils/debug.js';
 
 function createTabsStore() {
   const { subscribe, set, update } = writable([]);
 
+  const saveWorkspace = () => {
+    setTimeout(() => {
+      workspaceStore.saveCurrentWorkspace();
+    }, 0);
+  };
+
   return {
     subscribe,
-    // addTab: (entityType, searchParams = {}, id = nanoid()) => {
-    //   console.log('➕ Adding tab:', { id, entityType, searchParams });
-    //   update(tabs => {
-    //     const newTab = {
-    //       id,
-    //       entityType,
-    //       searchParams,
-    //       results: [],
-    //       loading: false,
-    //       error: null,
-    //       offset: 0,
-    //       hasMore: false
-    //     };
+    
+    addTab: (entityType, searchParams = {}, id = nanoid()) => {
+      dlog('➕ Adding tab:', { id, entityType, searchParams });
+      
+      let tabId = id;
+      update(tabs => {
+        const existingTab = tabs.find(tab => tab.id === id);
+        if (existingTab) {
+          dlog('⚠️ Tab already exists, skipping:', id);
+          tabId = existingTab.id;
+          return tabs;
+        }
+
+        const newTab = {
+          id,
+          entityType,
+          searchParams,
+          results: [],
+          loading: Object.keys(searchParams).length > 0,
+          error: null,
+          offset: 0,
+          hasMore: false
+        };
         
-    //     const updatedTabs = tabs.map(tab => ({ ...tab, active: false }));
-    //     const newTabs = [...updatedTabs, { ...newTab, active: true }];
-    //     console.log('📋 Tabs after add:', newTabs);
-    //     return newTabs;
-    //   });
-    //   return id;
-    // },
-addTab: (entityType, searchParams = {}, id = nanoid()) => {
-  console.log('➕ Adding tab:', { id, entityType, searchParams });
-  
-  return new Promise((resolve) => {
-    update(tabs => {
-      const newTab = {
-        id,
-        entityType,
-        searchParams,
-        results: [],
-        loading: Object.keys(searchParams).length > 0,
-        error: null,
-        offset: 0,
-        hasMore: false
-      };
+        const updatedTabs = tabs.map(tab => ({ ...tab, active: false }));
+        const newTabs = [...updatedTabs, { ...newTab, active: true }];
+        
+        return newTabs;
+      });
       
-      const updatedTabs = tabs.map(tab => ({ ...tab, active: false }));
-      const newTabs = [...updatedTabs, { ...newTab, active: true }];
-      
-      if (Object.keys(searchParams).length > 0) {
-        setTimeout(() => resolve(id), 0);
-      } else {
-        resolve(id);
-      }
-      
-      return newTabs;
-    });
-  });
-},
+      saveWorkspace();
+      return tabId;
+    },
+    
     updateTab: (tabId, updates) => {
-      console.log('🔄 Updating tab:', tabId, updates);
+      dlog('🔄 Updating tab:', tabId, updates);
       update(tabs => {
         const newTabs = tabs.map(tab => 
           tab.id === tabId ? { ...tab, ...updates } : tab
         );
-        console.log('📋 Tabs after update:', newTabs);
         return newTabs;
       });
+      saveWorkspace();
     },
+    
     removeTab: (tabId) => {
       update(tabs => {
         const filtered = tabs.filter(tab => tab.id !== tabId);
-        // last activated if last deleted
         if (filtered.length > 0 && !filtered.some(tab => tab.active)) {
           filtered[filtered.length - 1].active = true;
         }
         return filtered;
       });
+      saveWorkspace();
     },
+    
     updateSearchParams: (tabId, searchParams) => {
       update(tabs => tabs.map(tab => 
         tab.id === tabId ? { ...tab, searchParams, offset: 0, results: [] } : tab
       ));
+      saveWorkspace();
     },
+    
     setActiveTab: (tabId) => {
       update(tabs => tabs.map(tab => ({
         ...tab,
         active: tab.id === tabId
       })));
+      saveWorkspace();
     },
+    
     appendResults: (tabId, newResults, limit) => {
-      console.log('📥 Appending results to tab:', tabId, {
+      dlog('📥 Appending results to tab:', tabId, {
         newResultsCount: newResults.length,
-        limit,
-        currentResults: tabs.find(tab => tab.id === tabId)?.results?.length
+        limit
       });
       
       update(tabs => tabs.map(tab => {
         if (tab.id === tabId) {
-          dlog('🔍 Current tab before update:', {
-            id: tab.id,
-            entityType: tab.entityType,
-            currentResults: tab.results.length,
-            newResults: newResults.slice(0, 2) // first 2
-          });
-          
           const updatedResults = [...tab.results, ...newResults];
-          const updatedTab = {
+          return {
             ...tab,
             results: updatedResults,
             offset: updatedResults.length,
             hasMore: newResults.length === limit
           };
-          
-          console.log('🔍 Updated tab:', {
-            id: updatedTab.id,
-            resultsCount: updatedTab.results.length,
-            hasMore: updatedTab.hasMore,
-            firstResult: updatedTab.results[0] ? { ...updatedTab.results[0] } : null
-          });
-
-          return updatedTab;
         }
         return tab;
       }));
+      saveWorkspace();
     },
-    getTabsForWorkspace: (workspaceId) => {
-      let tabs;
-
-      tabsStore.subscribe(value => { tabs = value; })();
-      return tabs.map(tab => ({
-        id: tab.id,
-        entityType: tab.entityType,
-        searchParams: tab.searchParams,
-        results: tab.results,
-        loading: tab.loading,
-        error: tab.error,
-        offset: tab.offset,
-        hasMore: tab.hasMore
-      }));
-    },
-    clearAll: () => set([])
+    
+    clearAll: () => {
+      set([]);
+      saveWorkspace();
+    }
   };
 }
 

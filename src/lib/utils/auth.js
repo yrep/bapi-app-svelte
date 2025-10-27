@@ -12,7 +12,6 @@ export async function handleLogin(req, res) {
       });
     }
 
-    // Ищем пользователя по ключу
     const user = await DB.getUserByKey(userKey.trim());
     
     if (!user) {
@@ -29,15 +28,13 @@ export async function handleLogin(req, res) {
       });
     }
 
-    // Создаем сессию
     const sessionCode = crypto.randomBytes(32).toString('hex');
     await DB.createSession(user.id, sessionCode);
 
-    // Устанавливаем cookie с сессией
     res.cookie('bapi_session', sessionCode, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 дней
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       sameSite: 'lax'
     });
 
@@ -70,7 +67,6 @@ export async function handleCheckAuth(req, res) {
     const session = await DB.getSessionWithUser(sessionCode);
     
     if (!session) {
-      // Удаляем протухшую cookie
       res.clearCookie('bapi_session');
       return res.json({ authenticated: false });
     }

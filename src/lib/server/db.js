@@ -1,4 +1,5 @@
 import { createClient } from '@libsql/client';
+import { setupTestUser, DEBUG, dlog } from '$lib/utils/debug.js';
 
 const db = createClient({
   url: 'file:bapi.db'
@@ -34,7 +35,7 @@ async function initDatabase() {
 
     await seedDatabase();
 
-    console.log('Database initialized successfully');
+    dlog('Database initialized successfully');
   } catch (error) {
     console.error('Database initialization error:', error);
   }
@@ -46,7 +47,7 @@ async function seedDatabase() {
   const userCount = result.rows[0].count;
 
   if (userCount === 0) {
-    console.log('Seeding database with test users...');
+    dlog('Seeding database with test users...');
 
     const users = [
       {
@@ -76,7 +77,7 @@ async function seedDatabase() {
         args: [user.key, user.role, user.settings]
       });
     }
-    console.log('Test users added');
+    dlog('Test users added');
   }
 }
 
